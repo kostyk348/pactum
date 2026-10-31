@@ -1,0 +1,11 @@
+/target
+/data
+/keys
+*.key
+*.json.tmp
+contract.json
+pactum-key.json
+watchlist.json
+proofs/
+*.log
+.DS_Store

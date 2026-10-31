@@ -1,0 +1,21 @@
+[package]
+name = "pactum-scan"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Pactum scanner: watch url/file/cmd sources, conditional GET, SHA-256 dedup, candidate queue"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+pactum-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+ureq = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+thiserror = { workspace = true }

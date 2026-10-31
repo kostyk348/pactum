@@ -1,0 +1,26 @@
+{
+  "sources": [
+    {
+      "name": "rust-blog",
+      "url": "https://blog.rust-lang.org/feed.xml",
+      "interval_s": 600
+    },
+    {
+      "name": "rfc-status",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.txt",
+      "interval_s": 86400
+    },
+    {
+      "name": "daily-report",
+      "path": "reports/daily.json",
+      "interval_s": 300,
+      "topic": "ops.reports"
+    },
+    {
+      "name": "disk-free",
+      "cmd": "df -h /",
+      "interval_s": 3600,
+      "allow_volatile": true
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[package]
+name = "pactum-hub"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Pactum hub: subscription topics, leases, honest refusals, retry queue, HTTP API"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+pactum-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_urlencoded = { workspace = true }
+tokio = { workspace = true }
+axum = { workspace = true }
+thiserror = { workspace = true }
+ureq = { workspace = true }
+hex = { workspace = true }
+sha2 = { workspace = true }

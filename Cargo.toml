@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/pactum-core",
+    "crates/pactum-identity",
+    "crates/pactum-contract",
+    "crates/pactum-proof",
+    "crates/pactum-hub",
+    "crates/pactum-scan",
+    "crates/pactum-node",
+    "crates/pactum-cli",
+]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.80"
+license = "Apache-2.0"
+repository = "https://github.com/kostyk348/pactum"
+homepage = "https://github.com/kostyk348/pactum"
+authors = ["Konstantin <kostyk348@users.noreply.github.com>"]
+keywords = ["protocol", "contract", "escrow", "pubsub", "proof"]
+categories = ["network-programming", "command-line-utilities"]
+
+[workspace.dependencies]
+pactum-core = { path = "crates/pactum-core", version = "1.0.0" }
+pactum-identity = { path = "crates/pactum-identity", version = "1.0.0" }
+pactum-contract = { path = "crates/pactum-contract", version = "1.0.0" }
+pactum-proof = { path = "crates/pactum-proof", version = "1.0.0" }
+pactum-hub = { path = "crates/pactum-hub", version = "1.0.0" }
+pactum-scan = { path = "crates/pactum-scan", version = "1.0.0" }
+pactum-node = { path = "crates/pactum-node", version = "1.0.0" }
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "io-util", "process", "signal", "sync", "fs"] }
+axum = "0.8"
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_urlencoded = "0.7"
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+thiserror = "2"
+p256 = { version = "0.13", features = ["ecdsa", "pem"] }
+aes-gcm = "0.10"
+pbkdf2 = "0.12"
+ureq = { version = "2", default-features = true, features = ["json"] }
+
+[profile.release]
+lto = "thin"
+strip = "symbols"
+codegen-units = 1

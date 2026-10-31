@@ -1,0 +1,60 @@
+# Changelog
+
+Все заметные изменения проекта документируются в этом файле.
+Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/).
+
+## [1.0.0] — 2026-11-01
+
+Первый объединённый релиз. Pactum — референс-реализация ACP
+(Autonomous Contract Protocol): универсальный протокол честного обмена
+обязательствами для людей, сервисов, устройств и агентов.
+
+### Добавлено
+
+- **Крейты ядра**: `pactum-core` (письма RFC-822, SHA-256, JSON-Schema-валидатор,
+  цепочка фактов), `pactum-identity` (ECDSA P-256, keystore AES-GCM+PBKDF2).
+- **Контракты**: `pactum-contract` — модель `pactum-contract/v1`, escrow-движок
+  (Initiated → Accepted → Completed → Released/Refunded/Slashed), трейт
+  `SettlementProvider`, репутация +1/−1/−5.
+- **Потоки**: `pactum-hub` — подписки с арендой (≤24 ч), персистентная очередь
+  ретраев (5 с → 1 ч, 8 попыток), честные отказы (404 → `hub.mode=denied`,
+  исчерпание → degraded + 503, oversized → 413), HMAC-SHA256 подписи доставок.
+- **Сканер**: `pactum-scan` — источники url/file/cmd, conditional GET,
+  SHA-256-дедуп, вежливые интервалы, изменчивые источники только с явным
+  `allow_volatile`, очередь кандидатов с ревью человека.
+- **Доказательства**: `pactum-proof` — заявления с командой и отпечатком,
+  нормализация таймингов, вердикты verified/moved/broken; **новое против
+  оригинала**: тайм-аут команды (по умолчанию 120 с) — зависшая проверка
+  ругается, а не подвешивает CI.
+- **Узлы**: `pactum-node` — оркестратор, песочница-исполнитель (сбор
+  exec_hash/exit-кодов/артефактов), REST API, capability-релей с fan-out
+  и очередью на случай «подписчиков ещё нет».
+- **CLI**: бинарник `pactum` — id / contract / hub / scan / proof / facts /
+  node / demo.
+- **Демо**: `pactum demo` — полный жизненный цикл сделки в одном процессе.
+- **Спецификация**: `docs/PROTOCOL.md` (acp/1).
+- **Референс-эскроу**: `contracts/AgentEscrow.sol` + hardhat-тесты
+  (унаследовано из acp-mvp без изменений логики).
+- **CI/CD**: GitHub Actions — fmt, clippy (−D warnings), тесты, релизные
+  бинарники linux/macos/windows по тегу.
+- **Билингвальный README** (EN + RU) с перекрёстными ссылками.
+
+### Родословная
+
+- [acp-mvp](https://github.com/kostyk348/acp-mvp) — контракты, escrow, релей,
+  песочница, память (Python + Solidity) → `pactum-contract`, `pactum-node`,
+  `pactum-core`, `contracts/`.
+- [hubd](https://github.com/kostyk348/hubd) — хаб подписок и сканер (Python)
+  → `pactum-hub`, `pactum-scan`.
+- [proof](https://github.com/kostyk348/proof) — реестр заявлений (Rust)
+  → `pactum-proof`.
+
+### Изменено (ребрендинг)
+
+- «Agent Contract Protocol» → «**Autonomous** Contract Protocol»: участник —
+  не только агент (человек, сервис, устройство, организация).
+- Заголовок писем `X-Agent-Protocol` → `X-Pactum-Protocol` (значение `acp/1`);
+  совместимые заголовки `X-Escrow-Budget`, `X-Timeout-UTC` сохранены.
+- Один язык реализации — Rust; один бинарник — `pactum`.
+
+[1.0.0]: https://github.com/kostyk348/pactum/releases/tag/v1.0.0
