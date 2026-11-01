@@ -213,7 +213,7 @@ Protocol specification: [`docs/PROTOCOL.md`](docs/PROTOCOL.md) — letters, cont
 Settlement is a trait (`SettlementProvider`), not a belief system:
 
 - **`sim`** — built-in deterministic escrow engine: the full lifecycle, royalty split, slashing, reputation; works locally, no chain needed;
-- **blockchain** — [`contracts/AgentEscrow.sol`](contracts/README.md) from acp-mvp is the reference backend (ERC-20 + native ETH, `slashOnTimeout`, on-chain reputation), with 10 hardhat tests. A web3 adapter is on the roadmap; the trait is already stable.
+- **blockchain** — [`contracts/hardhat/contracts/AgentEscrow.sol`](contracts/README.md) from acp-mvp is the reference backend (ERC-20 + native ETH, `slashOnTimeout`, on-chain reputation), with 10 hardhat tests. A web3 adapter is on the roadmap; the trait is already stable.
 
 ## Security
 

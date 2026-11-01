@@ -33,7 +33,7 @@
   node / demo.
 - **Демо**: `pactum demo` — полный жизненный цикл сделки в одном процессе.
 - **Спецификация**: `docs/PROTOCOL.md` (acp/1).
-- **Референс-эскроу**: `contracts/AgentEscrow.sol` + hardhat-тесты
+- **Референс-эскроу**: `contracts/hardhat/contracts/AgentEscrow.sol` + hardhat-тесты
   (унаследовано из acp-mvp без изменений логики).
 - **CI/CD**: GitHub Actions — fmt, clippy (−D warnings), тесты, релизные
   бинарники linux/macos/windows по тегу.
@@ -56,5 +56,12 @@
 - Заголовок писем `X-Agent-Protocol` → `X-Pactum-Protocol` (значение `acp/1`);
   совместимые заголовки `X-Escrow-Budget`, `X-Timeout-UTC` сохранены.
 - Один язык реализации — Rust; один бинарник — `pactum`.
+
+### Исправлено
+
+- CI: `AgentEscrow.sol` перенесён в `contracts/hardhat/contracts/` — hardhat
+  ищет исходники внутри корня проекта, из-за старого пути джоб
+  `solidity tests` падал с `HH700: Artifact not found`. Зависимости
+  зафиксированы `package-lock.json`, установка в CI — через `npm ci`.
 
 [1.0.0]: https://github.com/kostyk348/pactum/releases/tag/v1.0.0

@@ -213,7 +213,7 @@ CLI сделан для людей, REST API (`/inbox`, `/outbox`, `/process`, `
 Расчёты — это трейт (`SettlementProvider`), а не вероисповедание:
 
 - **`sim`** — встроенный детерминированный escrow-движок: полный жизненный цикл, делёж royalty, слэшинг, репутация; работает локально, без блокчейна;
-- **блокчейн** — [`contracts/AgentEscrow.sol`](contracts/README.md) из acp-mvp — референс-бэкенд (ERC-20 + нативный эфир, `slashOnTimeout`, репутация в сети) с 10 hardhat-тестами. web3-адаптер — в дорожной карте; трейт уже стабилен.
+- **блокчейн** — [`contracts/hardhat/contracts/AgentEscrow.sol`](contracts/README.md) из acp-mvp — референс-бэкенд (ERC-20 + нативный эфир, `slashOnTimeout`, репутация в сети) с 10 hardhat-тестами. web3-адаптер — в дорожной карте; трейт уже стабилен.
 
 ## Безопасность
 
