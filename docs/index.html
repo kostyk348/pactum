@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pactum — honest exchange between autonomous participants</title>
+<meta name="description" content="Pactum implements ACP (Autonomous Contract Protocol): signed letters, a pub/sub hub with honest refusals, verifiable proofs and optional escrow. Works without money; Rust, Apache-2.0.">
+<meta property="og:title" content="Pactum — honest exchange between autonomous participants">
+<meta property="og:description" content="Signed commitments, delivery, proofs and optional escrow for humans, services, devices and agents. One Rust binary. Money optional.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1420'/%3E%3Cpath d='M18 14h20a12 12 0 0 1 0 24H30v12h-8V14zm8 8v8h11a4 4 0 0 0 0-8H26z' fill='%23f0b429'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0b0f14; --bg2:#0e141c; --panel:#121a24; --line:#1e2936;
+    --text:#e7eef6; --muted:#93a1b3; --dim:#5c6b7d;
+    --accent:#f0b429; --accent2:#ffd479; --link:#6cb2ff; --ok:#4ad07a;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body[data-lang="en"] .ru{display:none!important}
+  body[data-lang="ru"] .en{display:none!important}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+  code,.mono{font-family:var(--mono);font-size:.92em}
+  code{background:#0a121b;border:1px solid var(--line);border-radius:6px;padding:.1em .4em;color:var(--accent2)}
+
+  /* header */
+  header{position:sticky;top:0;z-index:50;background:rgba(11,15,20,.82);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:14px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700;font-size:18px;letter-spacing:.3px}
+  .brand:hover{text-decoration:none}
+  .brand svg{flex:0 0 auto}
+  nav{margin-left:auto;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  nav a{color:var(--muted);font-size:14.5px}
+  nav a:hover{color:var(--text);text-decoration:none}
+  .langsw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .langsw button{background:transparent;border:0;color:var(--muted);padding:5px 12px;cursor:pointer;
+    font:600 13px/1.4 inherit;font-family:inherit}
+  .langsw button.on{background:var(--accent);color:#141a22}
+
+  /* hero */
+  .hero{padding:84px 0 66px;border-bottom:1px solid var(--line);
+    background:radial-gradient(1200px 420px at 70% -80px,rgba(240,180,41,.09),transparent 60%)}
+  .overline{font-family:var(--mono);font-size:13px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent)}
+  h1{margin:10px 0 14px;font-size:56px;line-height:1.05;letter-spacing:-1px}
+  .tagline{font-size:22px;line-height:1.45;color:var(--text);max-width:760px;margin:0 0 12px}
+  .sub{color:var(--muted);max-width:720px;margin:0 0 26px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+  .btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:15px;border:1px solid var(--line)}
+  .btn:hover{text-decoration:none;filter:brightness(1.1)}
+  .btn.pri{background:var(--accent);color:#141a22;border-color:transparent}
+  .btn.sec{background:var(--panel);color:var(--text)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:12.5px;color:var(--muted);border:1px solid var(--line);
+    border-radius:999px;padding:4px 11px;background:var(--bg2)}
+
+  section{padding:58px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:30px;margin:0 0 8px;letter-spacing:-.4px}
+  .lead{color:var(--muted);max-width:760px;margin:0 0 30px}
+
+  /* flow */
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:26px 0 10px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;position:relative}
+  .step .n{font-family:var(--mono);color:var(--accent);font-size:12.5px}
+  .step h3{font-size:15.5px;margin:6px 0 6px}
+  .step p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .caption{color:var(--dim);font-size:13.5px;margin-top:14px}
+
+  /* cards */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card h3{margin:0 0 8px;font-size:16.5px}
+  .card p{margin:0;color:var(--muted);font-size:14.5px}
+  .card .tag{font-family:var(--mono);font-size:12px;color:var(--accent);display:block;margin-bottom:8px}
+  .icon{font-size:20px;line-height:1;display:block;margin-bottom:10px}
+
+  .callout{background:linear-gradient(180deg,rgba(240,180,41,.07),rgba(240,180,41,.02));
+    border:1px solid rgba(240,180,41,.35);border-radius:14px;padding:26px 26px 10px;margin-bottom:14px}
+  .callout h2{color:var(--accent2)}
+  .callout p{margin:0 0 14px}
+
+  pre{background:#0a1017;border:1px solid var(--line);border-radius:12px;padding:18px 20px;overflow:auto;
+    font-family:var(--mono);font-size:13.5px;line-height:1.7;color:#cfe3f7}
+  pre .c{color:#546a80}
+  pre .p{color:var(--accent)}
+  .endpoints{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .endpoints .chip{color:#a9c4de}
+
+  /* faq */
+  .qa{border-bottom:1px solid var(--line);padding:18px 0}
+  .qa:last-child{border-bottom:0}
+  .qa h3{margin:0 0 8px;font-size:17px}
+  .qa p{margin:0;color:var(--muted);font-size:15px}
+
+  footer{padding:44px 0 60px;color:var(--dim);font-size:14px}
+  footer .cols{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:22px}
+  footer h4{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px}
+  footer li{margin:5px 0;list-style:none}
+  footer ul{padding:0;margin:0}
+  footer a{color:var(--muted)}
+  footer a:hover{color:var(--text)}
+
+  @media(max-width:900px){
+    .flow{grid-template-columns:repeat(2,1fr)}
+    .grid4{grid-template-columns:repeat(2,1fr)}
+    h1{font-size:42px}
+  }
+  @media(max-width:560px){
+    .flow,.grid,.grid4{grid-template-columns:1fr}
+    h1{font-size:36px}
+    nav a:not(.langsw){display:none}
+  }
+</style>
+</head>
+<body data-lang="en">
+<script>
+(function(){
+  var saved=null; try{saved=localStorage.getItem('pactum-lang')}catch(e){}
+  var lang=saved||((navigator.language||'en').toLowerCase().indexOf('ru')===0?'ru':'en');
+  document.body.dataset.lang=lang; document.documentElement.lang=lang;
+})();
+</script>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top">
+      <svg width="26" height="26" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0d1420"/><path d="M18 14h20a12 12 0 0 1 0 24H30v12h-8V14zm8 8v8h11a4 4 0 0 0 0-8H26z" fill="#f0b429"/></svg>
+      Pactum
+    </a>
+    <nav>
+      <a href="#no-money"><span class="en">Money optional</span><span class="ru">Без денег</span></a>
+      <a href="#how"><span class="en">How it works</span><span class="ru">Как работает</span></a>
+      <a href="#modules"><span class="en">Modules</span><span class="ru">Модули</span></a>
+      <a href="#quickstart"><span class="en">Quick start</span><span class="ru">Быстрый старт</span></a>
+      <a href="#faq">FAQ</a>
+      <div class="langsw" role="group" aria-label="Language">
+        <button id="btn-en" onclick="setLang('en')" type="button">EN</button>
+        <button id="btn-ru" onclick="setLang('ru')" type="button">RU</button>
+      </div>
+      <a href="https://github.com/kostyk348/pactum">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="wrap">
+    <div class="overline">acp/1 · <span class="en">open protocol · reference implementation in Rust</span><span class="ru">открытый протокол · эталонная реализация на Rust</span></div>
+    <h1>Pactum</h1>
+    <p class="tagline">
+      <span class="en">Infrastructure for honest exchange between autonomous participants — humans, services, devices, and agents alike.</span>
+      <span class="ru">Инфраструктура честного обмена между автономными участниками — людьми, сервисами, устройствами и агентами.</span>
+    </p>
+    <p class="sub">
+      <span class="en">Participants make signed commitments, deliver them over ordinary HTTP, prove they are fulfilled, and settle — with or without money. No middleman, no platform lock-in: one Apache-2.0 binary you can run anywhere.</span>
+      <span class="ru">Участники подписывают обязательства, доставляют их обычным HTTP, доказывают исполнение и рассчитываются — с деньгами или без. Без посредника и привязки к платформе: один бинарник под Apache-2.0, который можно запустить где угодно.</span>
+    </p>
+    <div class="cta">
+      <a class="btn pri" href="https://github.com/kostyk348/pactum">
+        <span class="en">Source on GitHub</span><span class="ru">Исходники на GitHub</span>
+      </a>
+      <a class="btn sec" href="https://github.com/kostyk348/pactum/releases">
+        <span class="en">Download binaries</span><span class="ru">Скачать бинарники</span>
+      </a>
+      <a class="btn sec" href="https://github.com/kostyk348/pactum/blob/main/docs/PROTOCOL.md">
+        <span class="en">Protocol spec (acp/1)</span><span class="ru">Спецификация (acp/1)</span>
+      </a>
+    </div>
+    <div class="chips">
+      <span class="chip">Rust</span><span class="chip">Apache-2.0</span><span class="chip">v1.0.0</span>
+      <span class="chip"><span class="en">90+ tests incl. network e2e</span><span class="ru">90+ тестов, вкл. сетевой e2e</span></span>
+      <span class="chip"><span class="en">linux · macos · windows</span><span class="ru">linux · macos · windows</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MONEY OPTIONAL ============ -->
+<section id="no-money">
+  <div class="wrap">
+    <div class="callout">
+      <h2><span class="en">Money is optional. The protocol is not.</span><span class="ru">Деньги — опциональны. Протокол — нет.</span></h2>
+      <p>
+        <span class="en">Every module below works on the open internet with no payment rails attached. Escrow treats the budget as an opaque string — <code>0</code>, credits, machine-hours — so a zero-budget contract runs the exact same lifecycle, and reputation (<b>+1</b> success / <b>−1</b> failure / <b>−5</b> timeout) remains the enforcement. Hub, scanner, proofs and fact chains never touch settlement at all: they are independent crates you can run on their own.</span>
+        <span class="ru">Каждый модуль ниже работает в открытом интернете без каких-либо платёжных рельсов. Escrow считает бюджет непрозрачной строкой — <code>0</code>, кредиты, машино-часы, — поэтому контракт с нулевым бюджетом проходит ровно тот же жизненный цикл, а сдерживателем остаётся репутация (<b>+1</b> успех / <b>−1</b> провал / <b>−5</b> тайм-аут). Хаб, сканер, доказательства и цепочки фактов вообще не касаются расчётов: это независимые крейты, которые можно использовать по отдельности.</span>
+      </p>
+    </div>
+    <div class="grid4">
+      <div class="card">
+        <span class="icon">📡</span>
+        <h3><span class="en">Webhook hub</span><span class="ru">Хаб вебхуков</span></h3>
+        <p>
+          <span class="en">Subscribe and publish between your services: HMAC-signed deliveries, retry queue 5 s → 1 h (8 attempts), and honest refusals — 404 <i>denied</i>, 413 <i>oversized</i>, 503 <i>degraded</i> — instead of silent drops.</span>
+          <span class="ru">Подписки и публикации между вашими сервисами: доставки с HMAC-подписью, очередь ретраев 5 с → 1 ч (8 попыток) и честные отказы — 404 <i>denied</i>, 413 <i>oversized</i>, 503 <i>degraded</i> — вместо молчаливых потерь.</span>
+        </p>
+      </div>
+      <div class="card">
+        <span class="icon">🔍</span>
+        <h3><span class="en">Verifiable claims</span><span class="ru">Проверяемые заявления</span></h3>
+        <p>
+          <span class="en">A claim is a command plus a fingerprint of its output; the verdict is <i>verified</i>, <i>moved</i> or <i>broken</i>. A 120&nbsp;s timeout means a hung check fails loudly — you can gate CI on it.</span>
+          <span class="ru">Заявление — это команда плюс отпечаток её вывода; вердикт — <i>verified</i>, <i>moved</i> или <i>broken</i>. Тайм-аут 120&nbsp;с: зависшая проверка падает громко — можно вешать на неё CI.</span>
+        </p>
+      </div>
+      <div class="card">
+        <span class="icon">⛓️</span>
+        <h3><span class="en">Tamper-evident facts</span><span class="ru">Цепочки фактов</span></h3>
+        <p>
+          <span class="en">Node memory is a SHA-256 hash chain: every event is bound to the previous one, so nothing can be quietly edited afterwards. <code>/facts/verify</code> proves integrity at any moment.</span>
+          <span class="ru">Память узла — цепочка SHA-256-хешей: каждое событие привязано к предыдущему, тихо переписать задним числом ничего нельзя. <code>/facts/verify</code> в любой момент доказывает целостность.</span>
+        </p>
+      </div>
+      <div class="card">
+        <span class="icon">🏅</span>
+        <h3><span class="en">Reputation instead of money</span><span class="ru">Репутация вместо денег</span></h3>
+        <p>
+          <span class="en">Run escrow with a zero budget: the lifecycle <i>Initiated → Accepted → Completed → Released/Refunded/Slashed</i> is identical, the only currency is reputation.</span>
+          <span class="ru">Запускайте escrow с нулевым бюджетом: жизненный цикл <i>Initiated → Accepted → Completed → Released/Refunded/Slashed</i> тот же, единственная валюта — репутация.</span>
+        </p>
+      </div>
+    </div>
+    <p class="caption">
+      <span class="en">And when you do want real settlement, the <code>SettlementProvider</code> trait accepts anything: your accounting, credit counters, or a smart contract — a Solidity reference (<code>contracts/</code>) ships in the repo.</span>
+      <span class="ru">А когда понадобится настоящий расчёт, трейт <code>SettlementProvider</code> принимает что угодно: вашу бухгалтерию, счётчики кредитов или смарт-контракт — Solidity-референс (<code>contracts/</code>) есть в репозитории.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how">
+  <div class="wrap">
+    <h2><span class="en">How a deal works</span><span class="ru">Как проходит сделка</span></h2>
+    <p class="lead">
+      <span class="en">Five steps, each of them a plain HTTP exchange of signed letters. It works in one process (<code>pactum demo</code>) and the same way across machines.</span>
+      <span class="ru">Пять шагов, каждый — обычный HTTP-обмен подписанными письмами. Работает в одном процессе (<code>pactum demo</code>) и точно так же — между машинами.</span>
+    </p>
+    <div class="flow">
+      <div class="step"><span class="n">01</span>
+        <h3><span class="en">Commit</span><span class="ru">Обязательство</span></h3>
+        <p>
+          <span class="en">The principal signs a contract letter — RFC-822-style envelope, ECDSA P-256, budget and deadline inside.</span>
+          <span class="ru">Заказчик подписывает письмо-контракт — конверт в стиле RFC-822, ECDSA P-256, внутри бюджет и дедлайн.</span>
+        </p>
+      </div>
+      <div class="step"><span class="n">02</span>
+        <h3><span class="en">Deliver</span><span class="ru">Доставка</span></h3>
+        <p>
+          <span class="en">The hub hands the letter to subscribers by capability (<code>ci.compile.*</code>), with leases and retries.</span>
+          <span class="ru">Хаб раздаёт письмо подписчикам по capability (<code>ci.compile.*</code>), с арендами и ретраями.</span>
+        </p>
+      </div>
+      <div class="step"><span class="n">03</span>
+        <h3><span class="en">Execute</span><span class="ru">Исполнение</span></h3>
+        <p>
+          <span class="en">The executor runs the task in a sandbox and returns <code>exec_hash</code>, exit code and artifacts.</span>
+          <span class="ru">Исполнитель выполняет задачу в песочнице и возвращает <code>exec_hash</code>, код выхода и артефакты.</span>
+        </p>
+      </div>
+      <div class="step"><span class="n">04</span>
+        <h3><span class="en">Prove</span><span class="ru">Доказательство</span></h3>
+        <p>
+          <span class="en">The proof letter is verified independently: fingerprint, timings, chain of facts.</span>
+          <span class="ru">Письмо-доказательство проверяется независимо: отпечаток, тайминги, цепочка фактов.</span>
+        </p>
+      </div>
+      <div class="step"><span class="n">05</span>
+        <h3><span class="en">Settle</span><span class="ru">Расчёт</span></h3>
+        <p>
+          <span class="en">Escrow releases or refunds; reputation moves ±. With a zero budget — reputation only.</span>
+          <span class="ru">Escrow выплачивает или возвращает; репутация сдвигается на ±. При нулевом бюджете — только репутация.</span>
+        </p>
+      </div>
+    </div>
+    <p class="caption">
+      <span class="en">Both sides keep every letter in their own fact chain, so the history of a deal can be audited by a third party without trusting either of them.</span>
+      <span class="ru">Обе стороны хранят каждое письмо в своей цепочке фактов, поэтому историю сделки может проверить третья сторона, не доверяя ни одной из них.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ============ MODULES ============ -->
+<section id="modules">
+  <div class="wrap">
+    <h2><span class="en">Eight crates, one binary</span><span class="ru">Восемь крейтов, один бинарник</span></h2>
+    <p class="lead">
+      <span class="en">Each crate is usable on its own — take the hub without contracts, or proofs without escrow. The CLI folds them all into a single <code>pactum</code> executable.</span>
+      <span class="ru">Каждый крейт самодостаточен — берите хаб без контрактов или доказательства без escrow. CLI складывает их всех в один исполняемый файл <code>pactum</code>.</span>
+    </p>
+    <div class="grid">
+      <div class="card"><span class="tag">pactum-core</span>
+        <h3><span class="en">Letters and facts</span><span class="ru">Письма и факты</span></h3>
+        <p><span class="en">RFC-822-style signed envelopes, SHA-256, JSON-Schema validation, append-only fact chains.</span>
+        <span class="ru">Подписанные конверты в стиле RFC-822, SHA-256, валидация по JSON-Schema, append-only цепочки фактов.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-identity</span>
+        <h3><span class="en">Identity</span><span class="ru">Идентичность</span></h3>
+        <p><span class="en">ECDSA P-256 keys with an encrypted keystore (AES-GCM + PBKDF2). One key — one participant.</span>
+        <span class="ru">Ключи ECDSA P-256 с зашифрованным keystore (AES-GCM + PBKDF2). Один ключ — один участник.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-contract</span>
+        <h3><span class="en">Contracts and escrow</span><span class="ru">Контракты и escrow</span></h3>
+        <p><span class="en">The <code>pactum-contract/v1</code> model, a deterministic escrow engine, the <code>SettlementProvider</code> trait and reputation.</span>
+        <span class="ru">Модель <code>pactum-contract/v1</code>, детерминированный escrow-движок, трейт <code>SettlementProvider</code> и репутация.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-hub</span>
+        <h3><span class="en">Delivery hub</span><span class="ru">Хаб доставки</span></h3>
+        <p><span class="en">Pub/sub with leases up to 24 h, a persistent retry queue, honest refusals and HMAC-signed deliveries.</span>
+        <span class="ru">Pub/sub с арендами до 24 ч, персистентная очередь ретраев, честные отказы и HMAC-подписи доставок.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-scan</span>
+        <h3><span class="en">Source scanner</span><span class="ru">Сканер источников</span></h3>
+        <p><span class="en">Watches url/file/cmd sources with conditional GET, SHA-256 dedup and a human review queue for candidates.</span>
+        <span class="ru">Наблюдает источники url/file/cmd с conditional GET, SHA-256-дедупом и очередью кандидатов на ревью человека.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-proof</span>
+        <h3><span class="en">Proofs registry</span><span class="ru">Реестр доказательств</span></h3>
+        <p><span class="en">Claims = command + fingerprint. Verdicts verified / moved / broken, with a hard 120 s command timeout.</span>
+        <span class="ru">Заявление = команда + отпечаток. Вердикты verified / moved / broken и жёсткий тайм-аут команды 120 с.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-node</span>
+        <h3><span class="en">Network node</span><span class="ru">Сетевой узел</span></h3>
+        <p><span class="en">Orchestrator + sandbox executor + REST API + capability relay with fan-out, in one process.</span>
+        <span class="ru">Оркестратор + исполнитель в песочнице + REST API + capability-релей с fan-out — в одном процессе.</span></p>
+      </div>
+      <div class="card"><span class="tag">pactum-cli</span>
+        <h3><span class="en">Single binary</span><span class="ru">Единый бинарник</span></h3>
+        <p><span class="en"><code>pactum</code>: id · contract · hub · scan · proof · facts · node · demo. Plus the Solidity escrow reference in <code>contracts/</code>.</span>
+        <span class="ru"><code>pactum</code>: id · contract · hub · scan · proof · facts · node · demo. Плюс Solidity-референс escrow в <code>contracts/</code>.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUICK START ============ -->
+<section id="quickstart">
+  <div class="wrap">
+    <h2><span class="en">Quick start</span><span class="ru">Быстрый старт</span></h2>
+    <p class="lead">
+      <span class="en">Rust 1.75+ is enough. Nothing external is contacted — the demo is fully offline.</span>
+      <span class="ru">Достаточно Rust 1.75+. Никуда не ходим — демо полностью автономно.</span>
+    </p>
+<pre><span class="c"># build the single binary</span>
+git clone https://github.com/kostyk348/pactum && <span class="p">cd</span> pactum
+cargo build --release --workspace
+
+<span class="c"># the whole protocol lifecycle in one process (offline)</span>
+./target/release/pactum demo
+
+<span class="c"># a hub your services can talk over — no money involved</span>
+./target/release/pactum hub serve --port 8765
+./target/release/pactum hub subscribe --hub http://127.0.0.1:8765 \
+    --topic build.results --endpoint http://localhost:9001/hook
+./target/release/pactum hub publish --hub http://127.0.0.1:8765 \
+    --topic build.results --message "build ok"
+
+<span class="c"># a full node: REST API + hub + relay</span>
+./target/release/pactum node serve --port 8080 --capabilities "build.*"</pre>
+    <div class="endpoints">
+      <span class="chip">GET /health</span><span class="chip">GET|POST /inbox</span><span class="chip">POST /process</span>
+      <span class="chip">POST /outbox</span><span class="chip">GET /contracts</span><span class="chip">GET /facts</span>
+      <span class="chip">GET /facts/verify</span><span class="chip">GET /reputation/&#123;id&#125;</span>
+      <span class="chip">POST /hub/publish</span><span class="chip">POST /relay/subscribe</span>
+    </div>
+    <p class="caption">
+      <span class="en">Prefer a download? CI attaches binaries to every release: linux x64, macos x64/arm64, windows x64 — with SHA-256 sums.</span>
+      <span class="ru">Предпочитаете скачать? CI прикладывает к каждому релизу бинарники: linux x64, macos x64/arm64, windows x64 — с суммами SHA-256.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq">
+  <div class="wrap">
+    <h2>FAQ</h2>
+    <div class="qa">
+      <h3><span class="en">Do I need money or a blockchain to use it?</span><span class="ru">Нужны ли деньги или блокчейн?</span></h3>
+      <p>
+        <span class="en">No. Budget is an opaque string, zero works, and hub / scan / proof / facts are independent of settlement entirely. Blockchain is one possible settlement backend, not a dependency.</span>
+        <span class="ru">Нет. Бюджет — непрозрачная строка, ноль работает, а hub / scan / proof / facts вообще не зависят от расчётов. Блокчейн — один из возможных бэкендов расчётов, а не зависимость.</span>
+      </p>
+    </div>
+    <div class="qa">
+      <h3><span class="en">What can be a participant?</span><span class="ru">Кто может быть участником?</span></h3>
+      <p>
+        <span class="en">Anything that can hold a P-256 key and speak HTTP+JSON: a cron script, a CI runner, a printer, another LLM agent, a person with <code>curl</code>. Nothing in the protocol knows or cares that a participant is “an agent”.</span>
+        <span class="ru">Всё, что умеет держать ключ P-256 и говорить HTTP+JSON: cron-скрипт, CI-раннер, принтер, другой LLM-агент, человек с <code>curl</code>. Протокол не знает и не хочет знать, что участник — «агент».</span>
+      </p>
+    </div>
+    <div class="qa">
+      <h3><span class="en">Is the wire format stable?</span><span class="ru">Стабилен ли формат обмена?</span></h3>
+      <p>
+        <span class="en">Versioned as <code>acp/1</code> (<code>X-Pactum-Protocol</code> header), specified in <a href="https://github.com/kostyk348/pactum/blob/main/docs/PROTOCOL.md">docs/PROTOCOL.md</a>. Breaking changes would ship as <code>acp/2</code>, not silently.</span>
+        <span class="ru">Версионирован как <code>acp/1</code> (заголовок <code>X-Pactum-Protocol</code>), описан в <a href="https://github.com/kostyk348/pactum/blob/main/docs/PROTOCOL.md">docs/PROTOCOL.md</a>. Ломающие изменения поедут как <code>acp/2</code>, а не тихо.</span>
+      </p>
+    </div>
+    <div class="qa">
+      <h3><span class="en">What is not ready yet?</span><span class="ru">Чего ещё нет?</span></h3>
+      <p>
+        <span class="en">The web3 settlement adapter (trait and Solidity reference are ready, the HTTP glue is not), node-side persistence beyond the hub store, and a WASM sandbox. All are on the roadmap in the README — honestly labelled.</span>
+        <span class="ru">Web3-адаптер расчётов (трейт и Solidity-референс готовы, склейки с сетью нет), персистентность узла помимо хранилища хаба и WASM-песочница. Всё это — в роадмапе README, честно помечено.</span>
+      </p>
+    </div>
+    <div class="qa">
+      <h3><span class="en">Where did Pactum come from?</span><span class="ru">Откуда взялся Pactum?</span></h3>
+      <p>
+        <span class="en">It merges three earlier experiments — <i>acp-mvp</i> (contracts, escrow, relay), <i>hubd</i> (subscription hub, scanner) and <i>proof</i> (claims registry) — rewritten in Rust under one protocol. The lineage is documented in the README and CHANGELOG.</span>
+        <span class="ru">Он объединяет три ранних эксперимента — <i>acp-mvp</i> (контракты, escrow, релей), <i>hubd</i> (хаб подписок, сканер) и <i>proof</i> (реестр заявлений) — переписанные на Rust под единый протокол. Родословная задокументирована в README и CHANGELOG.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <h4><span class="en">Project</span><span class="ru">Проект</span></h4>
+        <ul>
+          <li><a href="https://github.com/kostyk348/pactum">GitHub</a></li>
+          <li><a href="https://github.com/kostyk348/pactum/releases"><span class="en">Releases</span><span class="ru">Релизы</span></a></li>
+          <li><a href="https://github.com/kostyk348/pactum/blob/main/CHANGELOG.md">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="en">Protocol</span><span class="ru">Протокол</span></h4>
+        <ul>
+          <li><a href="https://github.com/kostyk348/pactum/blob/main/docs/PROTOCOL.md">acp/1 spec</a></li>
+          <li><a href="https://github.com/kostyk348/pactum/blob/main/CONTRIBUTING.md"><span class="en">Contributing</span><span class="ru">Участие</span></a></li>
+          <li><a href="https://github.com/kostyk348/pactum/blob/main/README.md">README (EN / RU)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="en">Lineage</span><span class="ru">Родословная</span></h4>
+        <ul>
+          <li><a href="https://github.com/kostyk348/acp-mvp">acp-mvp</a> → contract · node · core</li>
+          <li><a href="https://github.com/kostyk348/hubd">hubd</a> → hub · scan</li>
+          <li><a href="https://github.com/kostyk348/proof">proof</a> → proof</li>
+        </ul>
+      </div>
+    </div>
+    <div>© 2026 kostyk348 · Apache-2.0 · <span class="en">Pactum: promises, proven.</span><span class="ru">Pactum: обещания, доказанные делом.</span></div>
+  </div>
+</footer>
+
+<script>
+function setLang(lang){
+  document.body.dataset.lang=lang;
+  document.documentElement.lang=lang;
+  document.getElementById('btn-en').classList.toggle('on',lang==='en');
+  document.getElementById('btn-ru').classList.toggle('on',lang==='ru');
+  try{localStorage.setItem('pactum-lang',lang)}catch(e){}
+}
+(function(){
+  var cur=document.body.dataset.lang||'en';
+  document.getElementById('btn-en').classList.toggle('on',cur==='en');
+  document.getElementById('btn-ru').classList.toggle('on',cur==='ru');
+})();
+</script>
+</body>
+</html>

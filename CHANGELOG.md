@@ -38,6 +38,8 @@
 - **CI/CD**: GitHub Actions — fmt, clippy (−D warnings), тесты, релизные
   бинарники linux/macos/windows по тегу.
 - **Билингвальный README** (EN + RU) с перекрёстными ссылками.
+- **Сайт**: двуязычный лендинг `docs/index.html` для GitHub Pages —
+  переключатель RU/EN, раздел «деньги опциональны», карточки модулей и REST.
 
 ### Родословная
 

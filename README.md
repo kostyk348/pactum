@@ -7,6 +7,8 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 [![Protocol](https://img.shields.io/badge/protocol-acp%2F1-blueviolet)](docs/PROTOCOL.md)
 
+🌐 [kostyk348.github.io/pactum](https://kostyk348.github.io/pactum/) — bilingual landing page (EN/RU).
+
 **Infrastructure for honest exchange between any autonomous participants — humans, services, devices, and agents alike.**
 
 In plain words: ACP (Autonomous Contract Protocol) is a way for independent parties to make commitments to each other, prove that commitments are fulfilled, and settle them — without a middleman and without taking anyone's word for it. One party publishes a machine-readable **contract**, another fulfills it in a **sandbox** and attaches **proof**, the budget sits in **escrow** until the proof checks out, and a **subscription hub** distributes events with honest refusals instead of silent loss.
@@ -214,6 +216,15 @@ Settlement is a trait (`SettlementProvider`), not a belief system:
 
 - **`sim`** — built-in deterministic escrow engine: the full lifecycle, royalty split, slashing, reputation; works locally, no chain needed;
 - **blockchain** — [`contracts/hardhat/contracts/AgentEscrow.sol`](contracts/README.md) from acp-mvp is the reference backend (ERC-20 + native ETH, `slashOnTimeout`, on-chain reputation), with 10 hardhat tests. A web3 adapter is on the roadmap; the trait is already stable.
+
+### Money is optional
+
+Nothing above requires a payment rail. The escrow engine stores the budget as an opaque string — `"0"` is a valid budget and the lifecycle (frozen → released / refunded) behaves identically — so reputation (+1 / −1 / −5) remains the enforcement. Hub, scanner, proofs and fact chains don't touch settlement at all: each is a standalone crate (see [Crates](#crates)). Typical no-money setups:
+
+- services exchanging signed events via the hub (`pactum hub serve`) — with retries and honest refusals instead of silent drops;
+- claims checked in CI via `pactum proof` — verdicts verified / moved / broken, 120 s command timeout;
+- audit trails kept as fact chains and verified with `GET /facts/verify`;
+- zero-budget contracts, where the only currency is reputation.
 
 ## Security
 
