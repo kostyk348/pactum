@@ -1,0 +1,19 @@
+name: Enable Pages (one-time)
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/enable-pages.yml']
+
+permissions:
+  pages: write
+
+jobs:
+  enable:
+    name: enable pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable GitHub Pages for /docs
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
