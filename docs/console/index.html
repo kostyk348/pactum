@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pactum Console — live ACP/1 demo</title>
+<meta name="description" content="Interactive in-browser demo of ACP: three agents (Scout, Digest, Auditor) exchange signed letters, subscribe with honest refusals, build a SHA-256 fact chain and verify proofs. Money optional.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1420'/%3E%3Cpath d='M18 14h20a12 12 0 0 1 0 24H30v12h-8V14zm8 8v8h11a4 4 0 0 0 0-8H26z' fill='%23f0b429'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0b0f14; --bg2:#0e141c; --panel:#121a24; --line:#1e2936;
+    --text:#e7eef6; --muted:#93a1b3; --dim:#5c6b7d;
+    --accent:#f0b429; --accent2:#ffd479; --link:#6cb2ff; --ok:#4ad07a;
+    --bad:#ff6b6b; --warn:#ffa94d; --purple:#b18cff;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:15.5px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body[data-lang="en"] .ru{display:none!important}
+  body[data-lang="ru"] .en{display:none!important}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+  .mono{font-family:var(--mono);font-size:.9em}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(11,15,20,.86);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:14px;height:58px}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700;font-size:17px}
+  .brand:hover{text-decoration:none}
+  .back{color:var(--muted);font-size:14px}
+  .langsw{margin-left:auto;display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .langsw button{background:transparent;border:0;color:var(--muted);padding:5px 12px;cursor:pointer;font:600 13px/1.4 inherit}
+  .langsw button.on{background:var(--accent);color:#141a22}
+
+  .hero{padding:34px 0 20px;border-bottom:1px solid var(--line);
+    background:radial-gradient(900px 320px at 65% -60px,rgba(240,180,41,.09),transparent 60%)}
+  .overline{font-family:var(--mono);font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent)}
+  h1{margin:8px 0 8px;font-size:34px;line-height:1.1;letter-spacing:-.5px}
+  .sub{color:var(--muted);max-width:860px;margin:0 0 14px;font-size:15.5px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line);
+    border-radius:999px;padding:3px 10px;background:var(--bg2)}
+  .chip.real{color:var(--ok);border-color:rgba(74,208,122,.4)}
+  .chip.sim{color:var(--accent2);border-color:rgba(240,180,41,.4)}
+
+  .controls{position:sticky;top:58px;z-index:40;background:rgba(11,15,20,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:10px 0}
+  .ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  button.act{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;
+    padding:7px 14px;font:600 13.5px/1.3 inherit;cursor:pointer}
+  button.act:hover{filter:brightness(1.15)}
+  button.act.pri{background:var(--accent);color:#141a22;border-color:transparent}
+  button.act:disabled{opacity:.45;cursor:default}
+  .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+  .lbl{font-family:var(--mono);font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+  select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:600 13px inherit}
+
+  .stage{display:grid;grid-template-columns:minmax(320px,5fr) 7fr;gap:14px;padding:18px 0}
+  .stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+  .card h3{margin:0 0 6px;font-size:14.5px;display:flex;align-items:center;gap:8px}
+  .card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:0 0 auto}
+  .card h3 .dot.on{background:var(--ok);box-shadow:0 0 6px rgba(74,208,122,.7)}
+  .card .meta{color:var(--muted);font-size:13px;margin:2px 0}
+  .rowline{display:flex;justify-content:space-between;gap:10px;font-size:12.8px;color:var(--muted);
+    border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+  .badge{font-family:var(--mono);font-size:11.5px;border-radius:6px;padding:1px 7px;border:1px solid var(--line)}
+  .badge.up{color:var(--ok);border-color:rgba(74,208,122,.45)}
+  .badge.down{color:var(--bad);border-color:rgba(255,107,107,.45)}
+  .badge.zero{color:var(--dim)}
+  .pill{font-family:var(--mono);font-size:10.5px;letter-spacing:.5px;border-radius:999px;padding:1px 8px}
+  .pill.sense{background:rgba(108,178,255,.12);color:var(--link)}
+  .pill.fact{background:rgba(74,208,122,.12);color:var(--ok)}
+  .pill.logi{background:rgba(177,140,255,.14);color:var(--purple)}
+  .pill.opin{background:rgba(255,212,121,.13);color:var(--accent2)}
+  .pill.actn{background:rgba(255,107,107,.13);color:var(--bad)}
+
+  .paneltitle{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+  .paneltitle h2{margin:0;font-size:16px}
+  .paneltitle .hint{color:var(--dim);font-size:12.5px}
+
+  #feed{display:flex;flex-direction:column;gap:9px;min-height:320px;max-height:640px;overflow:auto;padding-right:4px}
+  .msg{background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--dim);
+    border-radius:10px;padding:9px 12px;animation:in .25s ease}
+  @keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .msg .mh{display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+  .msg .kind{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;padding:1px 8px;border-radius:5px}
+  .kind.contract{background:rgba(240,180,41,.15);color:var(--accent2)}
+  .kind.event{background:rgba(108,178,255,.14);color:var(--link)}
+  .kind.proof{background:rgba(74,208,122,.14);color:var(--ok)}
+  .kind.receipt{background:rgba(147,161,179,.14);color:var(--muted)}
+  .kind.http{background:rgba(255,169,77,.14);color:var(--warn)}
+  .kind.notice{background:rgba(255,107,107,.13);color:var(--bad)}
+  .msg .route{color:var(--dim);font-size:12px;font-family:var(--mono)}
+  .msg pre{margin:4px 0 0;background:#0a1017;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+    font-family:var(--mono);font-size:12px;line-height:1.55;color:#cfe3f7;overflow:auto;max-height:230px;
+    white-space:pre-wrap;overflow-wrap:anywhere}
+  .msg pre .p{color:var(--accent)}
+  .msg pre .s{color:var(--ok)}
+  .msg pre .e{color:var(--bad)}
+  .msg.rejected{border-left-color:var(--bad)}
+  .msg.delivered{border-left-color:var(--ok)}
+  .msg.opaque .route i{color:var(--warn);font-style:normal}
+
+  .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 0 8px}
+  .blocks{display:flex;flex-direction:column;gap:6px;max-height:330px;overflow:auto}
+  .blk{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-family:var(--mono);font-size:11.8px}
+  .blk .l1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .blk .hx{color:var(--dim)}
+  .blk .hash{color:var(--accent2);word-break:break-all}
+  .blk.bad{border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.06)}
+  .blk .tampered{color:var(--bad)}
+  .verdict{font-family:var(--mono);font-size:12px;border-radius:7px;padding:3px 10px;display:inline-block;border:1px solid}
+  .verdict.ok{color:var(--ok);border-color:rgba(74,208,122,.5)}
+  .verdict.bad{color:var(--bad);border-color:rgba(255,107,107,.5)}
+  .prooffile{background:#0a1017;border:1px solid var(--line);border-radius:9px;padding:9px 11px;
+    font-family:var(--mono);font-size:12px;line-height:1.6;color:#cfe3f7;overflow:auto;
+    white-space:pre-wrap;overflow-wrap:anywhere}
+  .prooffile .p{color:var(--accent)}
+  .prooffile .s{color:var(--ok)}
+  #narr{color:var(--muted);font-size:14px;min-height:52px}
+  #narr b{color:var(--text)}
+  .settle{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  footer{padding:26px 0 46px;color:var(--dim);font-size:13.5px;border-top:1px solid var(--line)}
+  footer a{color:var(--muted)}
+
+  @media(max-width:1020px){
+    .stage{grid-template-columns:1fr}
+    .row3{grid-template-columns:1fr}
+    #feed{max-height:520px}
+  }
+</style>
+</head>
+<body data-lang="en">
+<script>
+(function(){
+  var saved=null; try{saved=localStorage.getItem('pactum-lang')}catch(e){}
+  var lang=saved||((navigator.language||'en').toLowerCase().indexOf('ru')===0?'ru':'en');
+  document.body.dataset.lang=lang; document.documentElement.lang=lang;
+})();
+</script>
+
+<header><div class="wrap bar">
+  <a class="brand" href="../">
+    <svg width="22" height="22" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0d1420"/><path d="M18 14h20a12 12 0 0 1 0 24H30v12h-8V14zm8 8v8h11a4 4 0 0 0 0-8H26z" fill="#f0b429"/></svg>
+    Pactum Console
+  </a>
+  <a class="back en" href="../">← landing</a>
+  <a class="back ru" href="../">← на лендинг</a>
+  <div class="langsw">
+    <button data-l="en">EN</button><button data-l="ru">RU</button>
+  </div>
+</div></header>
+
+<div class="hero"><div class="wrap">
+  <div class="overline">ACP/1 · three agents · one hub · no server</div>
+  <h1><span class="en">Live console: agents working by the protocol</span><span class="ru">Живая консоль: агенты работают по протоколу</span></h1>
+  <p class="sub"><span class="en">Scout collects candidates, Digest subscribes and writes facts, Auditor verifies proofs and reputation. Every message is a real <b>acp/1</b> letter, every hash below is a real SHA-256 computed in your browser. Budget of the demo contract is <b>0.00 USDC</b> — honesty here is enforced by reputation, not money.</span><span class="ru">Scout собирает кандидатов, Digest подписан на поток и пишет факты, Auditor проверяет доказательства и репутацию. Каждое сообщение — настоящее письмо <b>acp/1</b>, каждый хеш ниже — настоящий SHA-256, посчитанный в вашем браузере. Бюджет демо-контракта — <b>0.00 USDC</b>: честность здесь держится на репутации, а не на деньгах.</span></p>
+  <div class="chips">
+    <span class="chip real"><span class="en">SHA-256 · HMAC · FNV-1a — real</span><span class="ru">SHA-256 · HMAC · FNV-1a — настоящие</span></span>
+    <span class="chip sim"><span class="en">keys &amp; signatures — simulated</span><span class="ru">ключи и подписи — симуляция</span></span>
+    <span class="chip"><span class="en">everything runs locally</span><span class="ru">всё считается локально</span></span>
+  </div>
+</div></div>
+
+<div class="controls"><div class="wrap ctl">
+  <button class="act pri" id="bRun">▶ <span class="en">Run</span><span class="ru">Запустить</span></button>
+  <button class="act" id="bPause" disabled>⏸ <span class="en">Pause</span><span class="ru">Пауза</span></button>
+  <button class="act" id="bStep">⏭ <span class="en">Step</span><span class="ru">Шаг</span></button>
+  <button class="act" id="bReset">↺ <span class="en">Reset</span><span class="ru">Сброс</span></button>
+  <select id="bSpeed" title="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+  <div class="sep"></div>
+  <span class="lbl"><span class="en">Inject</span><span class="ru">Вмешаться</span></span>
+  <button class="act" id="bOversize" title="publish &gt; 256 KiB">413 <span class="en">oversize</span><span class="ru">превышен размер</span></button>
+  <button class="act" id="bDeny" title="subscriber answers 404">404 <span class="en">not for me</span><span class="ru">не для меня</span></button>
+  <button class="act" id="bTamper" title="rewrite a stored fact">✗ <span class="en">tamper chain</span><span class="ru">подделать цепочку</span></button>
+</div></div>
+
+<main class="wrap">
+  <div class="stage">
+    <div class="stack" id="agentsCol">
+      <div class="card" id="hubcard">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f0b429" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="5" r="2"/><circle cx="20" cy="5" r="2"/><circle cx="4" cy="19" r="2"/><circle cx="20" cy="19" r="2"/><path d="M5.5 6.2 9.8 10M18.5 6.2 14.2 10M5.5 17.8 9.8 14M18.5 17.8 14.2 14"/></svg>
+          <span class="en">Hub — honest pub/sub</span><span class="ru">Хаб — честный pub/sub</span></h3>
+        <div class="meta mono">/hub/subscribe · /hub/publish · /hub/journal</div>
+        <div id="hubsubs"></div>
+        <div class="rowline" id="hubstats"></div>
+      </div>
+      <div class="card" id="c-scout"></div>
+      <div class="card" id="c-digest"></div>
+      <div class="card" id="c-auditor"></div>
+      <div class="card">
+        <h3><span class="en">What is happening</span><span class="ru">Что происходит</span></h3>
+        <div id="narr"></div>
+        <div class="settle" id="settle"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <div class="paneltitle"><h2><span class="en">Letter feed</span><span class="ru">Лента писем</span></h2>
+          <span class="hint mono">acp/1 · RFC-822 envelope + JSON body</span></div>
+        <div id="feed"><div class="msg"><div class="mh"><span class="route en">Press “Run” — letters will appear here.</span><span class="route ru">Нажмите «Запустить» — письма появятся здесь.</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row3">
+    <div class="card">
+      <div class="paneltitle"><h2><span class="en">Fact chain</span><span class="ru">Цепочка фактов</span></h2>
+        <span class="verdict hidden" id="chainVerdict"></span></div>
+      <div class="meta" style="color:var(--muted);font-size:12.8px;margin:0 0 8px">
+        <span class="en">hash = SHA256(seq|ts|REGISTER|text|contract_id|prev_hash)</span>
+        <span class="ru">hash = SHA256(seq|ts|РЕГИСТР|text|contract_id|prev_hash)</span>
+      </div>
+      <div class="blocks" id="chain"></div>
+    </div>
+    <div class="card">
+      <div class="paneltitle"><h2><span class="en">Proof registry</span><span class="ru">Реестр доказательств</span></h2>
+        <span class="hint mono">flat file · git-friendly</span></div>
+      <div id="proofs"></div>
+    </div>
+    <div class="card">
+      <div class="paneltitle"><h2><span class="en">Ledger of reputation</span><span class="ru">Книга репутации</span></h2>
+        <span class="hint mono">+1 / −1 / −5</span></div>
+      <div id="ledger"></div>
+    </div>
+  </div>
+</main>
+
+<footer><div class="wrap">
+  <span class="en">Browser demo of <a href="https://github.com/kostyk348/pactum">Pactum</a> (ACP/1). SHA-256, HMAC-SHA256 and FNV-1a fingerprints are computed for real; key pairs and ECDSA signatures are simulated (marked <span class="mono">ecdsa-p256:sim:</span>). Refusals, retries and leases follow <a href="../PROTOCOL.md">the protocol spec</a>. Nothing leaves your browser.</span>
+  <span class="ru">Браузерное демо <a href="https://github.com/kostyk348/pactum">Pactum</a> (ACP/1). SHA-256, HMAC-SHA256 и отпечатки FNV-1a считаются по-настоящему; ключевые пары и подписи ECDSA симулированы (помечены <span class="mono">ecdsa-p256:sim:</span>). Отказы, ретраи и аренда — по <a href="../PROTOCOL.md">спецификации протокола</a>. Ничто не покидает ваш браузер.</span>
+</div></footer>
+
+<script>
+'use strict';
+/* ============ real crypto (browser & node) ============ */
+const K256=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+function utf8(s){return new TextEncoder().encode(s);}
+function bytesCat(a,b){const r=new Uint8Array(a.length+b.length);r.set(a);r.set(b,a.length);return r;}
+function hexToBytes(h){const r=new Uint8Array(h.length/2);for(let i=0;i<r.length;i++)r[i]=parseInt(h.substr(i*2,2),16);return r;}
+function wordsHex(H){return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');}
+function sha256Bytes(msg){
+  const l=msg.length,total=((l+9+63)>>6)<<6;
+  const buf=new Uint8Array(total);buf.set(msg);buf[l]=0x80;
+  const dv=new DataView(buf.buffer);
+  dv.setUint32(total-8,Math.floor(l/0x20000000));dv.setUint32(total-4,(l<<3)>>>0);
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const w=new Int32Array(64);
+  const rotr=(x,n)=>((x>>>n)|(x<<(32-n)))>>>0;
+  for(let off=0;off<total;off+=64){
+    for(let i=0;i<16;i++)w[i]=dv.getUint32(off+4*i)|0;
+    for(let i=16;i<64;i++){
+      const x=w[i-15],y=w[i-2];
+      const s0=(rotr(x,7)^rotr(x,18)^(x>>>3))>>>0;
+      const s1=(rotr(y,17)^rotr(y,19)^(y>>>10))>>>0;
+      w[i]=(w[i-16]+s0+w[i-7]+s1)|0;
+    }
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(let i=0;i<64;i++){
+      const S1=(rotr(e,6)^rotr(e,11)^rotr(e,25))>>>0;
+      const ch=((e&f)^(~e&g))>>>0;
+      const t1=(h+S1+ch+K256[i]+w[i])|0;
+      const S0=(rotr(a,2)^rotr(a,13)^rotr(a,22))>>>0;
+      const mj=((a&b)^(a&c)^(b&c))>>>0;
+      const t2=(S0+mj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    H=[(H[0]+a)|0,(H[1]+b)|0,(H[2]+c)|0,(H[3]+d)|0,(H[4]+e)|0,(H[5]+f)|0,(H[6]+g)|0,(H[7]+h)|0];
+  }
+  return H;
+}
+function sha256(s){return wordsHex(sha256Bytes(utf8(s)));}
+function hmacSha256(keyS,msgS){
+  let key=utf8(keyS);
+  if(key.length>64)key=hexToBytes(wordsHex(sha256Bytes(key)));
+  const ip=new Uint8Array(64).fill(0x36),op=new Uint8Array(64).fill(0x5c);
+  for(let i=0;i<key.length;i++){ip[i]^=key[i];op[i]^=key[i];}
+  return wordsHex(sha256Bytes(bytesCat(op,hexToBytes(wordsHex(sha256Bytes(bytesCat(ip,utf8(msgS))))))));
+}
+function fnv1a64(s){
+  let h=0xcbf29ce484222325n;const p=0x100000001b3n,M=(1n<<64n)-1n;
+  for(const b of utf8(s)){h^=BigInt(b);h=(h*p)&M;}
+  return h.toString(16).padStart(16,'0');
+}
+function normalizeOut(s){return s.replace(/\b\d+(?:\.\d+)?s\b/g,'<t>');}
+
+/* ============ protocol pieces ============ */
+function nowTs(){return new Date().toISOString().replace(/\.\d{3}Z$/,'Z');}
+function makeId(name){ // p + first 16 hex of SHA-256 over the "public key" (simulated)
+  const key='04'+sha256('pactum-demo-key:'+name)+sha256('pactum-demo-key2:'+name);
+  return 'p'+sha256(key).slice(0,16);
+}
+const ID={scout:makeId('scout'),digest:makeId('digest'),auditor:makeId('auditor')};
+const short=id=>id.slice(0,9)+'…';
+function envelope(o){
+  const h=[['X-Pactum-Protocol','acp/1'],['X-Pactum-Kind',o.kind],['X-Pactum-From',o.from]];
+  if(o.capability)h.push(['X-Pactum-Capability',o.capability]);
+  if(o.replyTo)h.push(['X-Pactum-Reply-To',o.replyTo]);
+  if(o.budget)h.push(['X-Escrow-Budget',o.budget]);
+  if(o.timeout)h.push(['X-Timeout-UTC',o.timeout]);
+  if(o.extra)for(const kv of o.extra)h.push(kv);
+  h.push(['Date',nowTs()]);
+  h.sort((a,b)=>a[0]<b[0]?-1:1);
+  const canon=h.map(kv=>kv[0]+': '+kv[1]+'\n').join('');
+  const compact=JSON.stringify(o.body);
+  const sig='ecdsa-p256:sim:'+sha256(canon+'\n'+compact).slice(0,64);
+  const text=h.map(kv=>kv[0]+': '+kv[1]).join('\n')+'\nX-Pactum-Signature: '+sig+'\n\n'+JSON.stringify(o.body,null,2);
+  return {text,sig};
+}
+function addFact(chain,owner,register,text,contractId){
+  const own=chain.filter(b=>b.owner===owner);
+  const prev=own.length?own[own.length-1].hash:'0'.repeat(64);
+  const seq=own.length+1,ts=nowTs();
+  const hash=sha256([seq,ts,register,text,contractId||'',prev].join('|'));
+  const blk={seq,ts,owner,register,text,contract_id:contractId||null,prev_hash:prev,hash};
+  chain.push(blk);return blk;
+}
+function verifyChain(chain,owner,overrideText){
+  const own=chain.filter(b=>b.owner===owner);
+  for(const b of own){
+    const text=(overrideText&&overrideText[b.seq]!=null)?overrideText[b.seq]:b.text;
+    const h=sha256([b.seq,b.ts,b.register,text,b.contract_id||'',b.prev_hash].join('|'));
+    if(h!==b.hash)return{ok:false,at:b.seq,stored:b.hash,recomputed:h};
+    if(b.seq>1&&b.prev_hash!==own[b.seq-2].hash)return{ok:false,at:b.seq,stored:b.hash,recomputed:h};
+  }
+  return{ok:true,n:own.length};
+}
+function proofFile(id,claim,cmd,digest,excerpt,status){
+  return 'id='+id+'\nclaim='+claim+'\ncmd='+cmd+'\nexpect=0\ntimeout=120\n'
+    +'status='+status+'\ndigest='+digest+'\nexcerpt='+excerpt;
+}
+
+/* ============ demo data ============ */
+const RAW=[
+  {id:'cand-9f21',src:'blog', url:'https://example.org/blog/post-1',    title:'Design notes: honest refusals'},
+  {id:'cand-4c02',src:'blog', url:'https://example.org/blog/post-2',    title:'Retries that never lie'},
+  {id:'cand-7a55',src:'docs', url:'https://example.org/docs/guide',     title:'Getting started guide'},
+  {id:'cand-1d88',src:'docs', url:'https://example.org/blog/post-2',    title:'Retries that never lie'},
+  {id:'cand-e310',src:'api',  url:'https://example.org/api/changelog',  title:'API changelog'},
+  {id:'cand-b647',src:'api',  url:'https://example.org/status/uptime',  title:'Status page'}
+];
+const BATCH='b17a3f';
+
+/* ============ state ============ */
+let S=null,timer=null;
+function freshState(){
+  return{idx:0,booted:false,speed:1,running:false,
+    narr:{en:'Press <b>Run</b> or <b>Step</b>. The scenario is fully deterministic except timestamps; every hash is computed live.',ru:'Нажмите <b>Запустить</b> или <b>Шаг</b>. Сценарий детерминирован, кроме меток времени; каждый хеш считается заново на ваших глазах.'},
+    agents:{scout:{rep:0,out:0,inn:0,status:{en:'waiting',ru:'ожидает'}},
+            digest:{rep:0,out:0,inn:0,status:{en:'waiting',ru:'ожидает'}},
+            auditor:{rep:0,out:0,inn:0,status:{en:'waiting',ru:'ожидает'}}},
+    hub:{subs:[],stats:{pub:0,del:0,denied:0,r413:0}},
+    chain:[],proofs:[],feed:[],ledger:[],settle:[],
+    tamper:null,verified:false};
+}
+function feed(kind,from,to,text,cls){S.feed.push({kind,from,to,text,cls:cls||''});if(S.feed.length>80)S.feed.shift();}
+function ledger(who,delta,why){S.agents[who].rep+=delta;S.ledger.push({who,delta,why});}
+function narr(en,ru){S.narr={en,ru};}
+
+/* ============ scenario steps ============ */
+const STEPS=[
+{id:'boot',en:'identity',ru:'идентичности',run(){
+  S.booted=true;
+  for(const w of['scout','digest','auditor'])S.agents[w].status={en:'key loaded, node id derived',ru:'ключ загружен, id выведен'};
+  narr('Each participant is a key pair. Node id = <b>p</b> + first 16 hex chars of SHA-256 over the public key (§3): Scout <b>'+short(ID.scout)+'</b>, Digest <b>'+short(ID.digest)+'</b>, Auditor <b>'+short(ID.auditor)+'</b>. No registration anywhere — the key is the identity.',
+       'Каждый участник — это пара ключей. id узла = <b>p</b> + первые 16 hex-символов SHA-256 от публичного ключа (§3): Scout <b>'+short(ID.scout)+'</b>, Digest <b>'+short(ID.digest)+'</b>, Auditor <b>'+short(ID.auditor)+'</b>. Никакой регистрации — ключ и есть личность.');
+}},
+{id:'subscribe',en:'subscribe with challenge',ru:'подписка с вызовом',run(){
+  const secret=sha256('hub-secret:'+nowTs()).slice(0,32);
+  S.hub.subs.push({sub:'Digest',node:ID.digest,topic:'scan.candidates',lease:86400,state:'active',secret});
+  S.agents.digest.out++;S.agents.digest.status={en:'subscribed to scan.candidates',ru:'подписан на scan.candidates'};
+  feed('http','Digest → Hub','/hub/subscribe',
+    'POST /hub/subscribe\nhub.mode=subscribe\nhub.topic=scan.candidates\nhub.callback=http://digest.local/callback\nhub.lease_seconds=86400\nhub.secret='+secret.slice(0,8)+'…');
+  const ch=sha256('challenge:'+nowTs()).slice(0,12);
+  feed('http','Hub → Digest','challenge',
+    'GET http://digest.local/callback?hub.challenge='+ch+'&hub.topic=scan.candidates\n\n→ 200 OK ("'+ch+'" echoed)',null);
+  narr('Digest subscribes to <b>scan.candidates</b> with a 24 h lease (max allowed) and a shared secret. The hub does not take the callback on faith: it sends a <b>challenge</b>, and the subscription activates only after the subscriber echoes it — WebSub-style verification (§5).',
+       'Digest подписывается на <b>scan.candidates</b> с арендой 24 ч (максимум по протоколу) и общим секретом. Хаб не верит callback на слово: он присылает <b>challenge</b>, и подписка активируется только после ответа эхом — проверка в духе WebSub (§5).');
+}},
+{id:'contract',en:'contract (budget 0)',ru:'контракт (бюджет 0)',run(){
+  const c=envelope({kind:'contract',from:ID.digest,capability:'scan.collect.*',replyTo:'http://digest.local/inbox',
+    budget:'0.00 USDC',timeout:new Date(Date.now()+15*60000).toISOString().replace(/\.\d{3}Z$/,'Z'),
+    body:{schema:'pactum-contract/v1',schema_version:'1.0.0',contract_id:'c-'+BATCH+'demo',
+      intent:{type:'scan.collect.rust',title:'Collect and deduplicate candidates',
+        source:{type:'inline',data:'watchlist: blog, docs, api'}},
+      verification:{tests:[{cmd:'pactum scan candidates --status accepted --count 5',timeout_s:60}],
+        artifacts_expected:[{path:'queue.jsonl',min_size:64}]},
+      settlement:{provider:'sim',budget:{amount:'0.00',unit:'USDC'},on_success:'release_escrow',
+        on_failure:'refund',royalty_split:{principal:90,executor:10},auto_verify:true,slash_stake_percent:10},
+      parties:{principal:ID.digest,executor:null},deadline_utc:new Date(Date.now()+15*60000).toISOString().replace(/\.\d{3}Z$/,'Z')}});
+  S.agents.digest.out++;S.agents.scout.inn++;
+  feed('contract','Digest → relay → Scout','capability scan.collect.*',c.text);
+  const acc=envelope({kind:'receipt',from:ID.scout,replyTo:'http://scout.local/inbox',
+    extra:[['X-Pactum-Contract','c-'+BATCH+'demo']],
+    body:{schema:'pactum-receipt/v1',accepted:true,executor:ID.scout,note:'accept: capability matches scan.collect.*'}});
+  S.agents.scout.out++;S.agents.digest.inn++;
+  feed('receipt','Scout → Digest','contract c-'+BATCH+'demo',acc.text);
+  S.settle=[{t:'escrow (sim)',v:'0.00 USDC frozen'},{t:'contract',v:'c-'+BATCH+'demo · Initiated → Accepted'}];
+  narr('Digest publishes a <b>contract letter</b> (pactum-contract/v1): collect candidates, prove with a count command, deadline in 15 minutes. The relay fans it out by capability <b>scan.collect.*</b>, Scout accepts. Budget: <b>0.00 USDC</b> — and the escrow engine still runs the full lifecycle. Money is optional; obligations are not.',
+       'Digest публикует <b>письмо-контракт</b> (pactum-contract/v1): собрать кандидатов, доказать командой подсчёта, дедлайн 15 минут. Релей раздаёт письмо по capability <b>scan.collect.*</b>, Scout принимает. Бюджет: <b>0.00 USDC</b> — и escrow-движок всё равно проживает полный жизненный цикл. Деньги опциональны; обязательства — нет.');
+}},
+{id:'collect',en:'Scout collects, publishes',ru:'Scout собирает и публикует',run(){
+  addFact(S.chain,'scout','SENSE','watchlist ran: 6 raw items from blog/docs/api (batch '+BATCH+')',null);
+  S.agents.scout.status={en:'sandbox ran: 6 items, publishing',ru:'песочница отработала: 6 позиций, публикую'};
+  const body={schema:'pactum-event/v1',topic:'scan.candidates',batch:BATCH,
+    items:RAW.map(r=>({id:r.id,url:r.url,title:r.title,sha256:sha256(r.url+'|'+r.title)}))};
+  const ev=envelope({kind:'event',from:ID.scout,extra:[['X-Pactum-Topic','scan.candidates']],body});
+  S.agents.scout.out++;S.hub.stats.pub++;
+  feed('event','Scout → Hub','POST /hub/publish?topic=scan.candidates',ev.text);
+  narr('Scout runs its watchlist in a sandbox and appends a <b>SENSE</b> fact — raw observation, not truth. Then it publishes the batch as an <b>event</b>: 6 items, each with a real SHA-256 over url+title. Publication is honest by construction: the hub will confirm delivery or refuse loudly.',
+       'Scout прогоняет watchlist в песочнице и пишет факт в регистре <b>SENSE</b> — сырое наблюдение, ещё не истина. Затем публикует батч <b>событием</b>: 6 позиций, у каждой настоящий SHA-256 от url+заголовок. Публикация честна по построению: хаб либо подтвердит доставку, либо громко откажет.');
+}},
+{id:'deliver',en:'delivery + dedup',ru:'доставка + дедуп',run(){
+  const body={schema:'pactum-event/v1',topic:'scan.candidates',batch:BATCH,
+    items:RAW.map(r=>({id:r.id,url:r.url,title:r.title,sha256:sha256(r.url+'|'+r.title)}))};
+  const raw=JSON.stringify(body);
+  const mac='sha256='+hmacSha256(S.hub.subs[0].secret,raw);
+  S.hub.stats.del++;S.agents.digest.inn++;
+  feed('http','Hub → Digest','POST callback',
+    'POST http://digest.local/callback\nX-Hub-Signature: '+mac+'\nContent-Length: '+raw.length+' bytes\n\n'+raw.slice(0,600)+(raw.length>600?' …':''),'delivered');
+  feed('receipt','Digest','verify HMAC',
+    'HMAC-SHA256(secret, body)\nexpected  '+mac+'\ncomputed  '+mac+'\n\n→ match ✓  (verified locally, in your browser)');
+  const uniq={};for(const r of RAW)uniq[r.url+'|'+r.title]=r;
+  const n=Object.keys(uniq).length;
+  addFact(S.chain,'digest','FACT','received batch '+BATCH+': 6 raw items, HMAC-SHA256 delivery signature valid',null);
+  addFact(S.chain,'digest','LOGIC','dedup by content SHA-256: 6 → '+n+' unique (cand-1d88 == cand-4c02)',null);
+  S.agents.digest.status={en:'HMAC ok, '+n+' unique facts written',ru:'HMAC ок, '+n+' уникальных фактов записано'};
+  S.settle=S.settle.map(x=>x.t==='escrow (sim)'?{t:'escrow (sim)',v:'0.00 USDC frozen · work in progress'}:x);
+  narr('The hub delivers with <b>X-Hub-Signature: sha256=HMAC(secret, body)</b> — and Digest recomputes the HMAC in your browser: match. Then the boring heroics: two candidates are byte-identical, so SHA-256 dedup folds 6 raw items into <b>'+n+' unique</b>. Both conclusions go into the fact chain as <b>FACT</b> and <b>LOGIC</b> blocks.',
+       'Хаб доставляет с <b>X-Hub-Signature: sha256=HMAC(secret, body)</b> — Digest пересчитывает HMAC прямо в вашем браузере: совпало. Дальше скучный героизм: два кандидата байт-в-байт совпадают, поэтому SHA-256-дедуп сжимает 6 сырых позиций до <b>'+n+' уникальных</b>. Оба вывода уходят в цепочку фактов блоками <b>FACT</b> и <b>LOGIC</b>.');
+}},
+{id:'proof',en:'proof + verification',ru:'доказательство + проверка',run(){
+  const vr=verifyChain(S.chain,'digest');
+  const excerpt='OK ('+vr.n+' blocks, chain intact); 5 accepted';
+  const dg=fnv1a64(normalizeOut(excerpt));
+  const pbody={schema:'pactum-proof/v1',claim:'5 unique candidates from 6 raw, fact chain intact',
+    cmd:'pactum facts verify && pactum scan candidates --status accepted --count 5',
+    expect:0,timeout_s:120,digest:dg,excerpt};
+  const pf=envelope({kind:'proof',from:ID.digest,replyTo:'http://digest.local/inbox',
+    extra:[['X-Pactum-Contract','c-'+BATCH+'demo']],
+    body:pbody});
+  S.proofs.push({id:1,text:proofFile(1,pbody.claim,pbody.cmd,dg,excerpt,'verified'),status:'verified'});
+  S.agents.digest.out++;S.agents.auditor.inn++;
+  feed('proof','Digest → Auditor','contract c-'+BATCH+'demo',pf.text);
+  const rc=envelope({kind:'receipt',from:ID.auditor,replyTo:'http://auditor.local/inbox',
+    extra:[['X-Pactum-Contract','c-'+BATCH+'demo']],
+    body:{schema:'pactum-receipt/v1',verdict:'verified',rechecked:true,
+      checks:['fact chain re-hashed: '+vr.n+'/'+vr.n+' blocks match','fingerprint FNV-1a-64 recomputed: '+dg+' match','exit 0 == expect 0']}});
+  S.agents.auditor.out++;S.agents.digest.inn++;
+  feed('receipt','Auditor → Digest','verdict: verified',rc.text);
+  ledger('digest',1,{en:'proof verified by Auditor (+1)',ru:'доказательство проверено Auditor-ом (+1)'});
+  S.agents.digest.status={en:'proof verified, escrow released',ru:'доказательство проверено, escrow выпущен'};
+  S.agents.auditor.status={en:'re-verified: chain + fingerprint',ru:'перепроверил: цепочка + отпечаток'};
+  addFact(S.chain,'auditor','ACTION','proof #1 verified: chain re-hashed ('+vr.n+' blocks), fingerprint match, exit 0','c-'+BATCH+'demo');
+  S.settle=[{t:'escrow (sim)',v:'0.00 USDC → Released'},{t:'contract',v:'c-'+BATCH+'demo → Completed → Released'}];
+  S.verified=true;
+  narr('Digest does not say "trust me" — it sends a <b>proof letter</b>: the claim, the exact command, and an FNV-1a-64 fingerprint of normalized output. Auditor <b>re-runs the check itself</b>: re-hashes the whole chain, recomputes the fingerprint, compares exit codes. Verdict: <b>verified</b>. Escrow releases <b>0.00 USDC</b>, reputation <b>+1</b>. That +1 is the only currency that moved.',
+       'Digest не говорит «поверь мне» — он отправляет <b>письмо-доказательство</b>: заявление, точную команду и отпечаток FNV-1a-64 нормализованного вывода. Auditor <b>перепроверяет сам</b>: заново хеширует всю цепочку, пересчитывает отпечаток, сверяет коды выхода. Вердикт: <b>verified</b>. Escrow выпускает <b>0.00 USDC</b>, репутация <b>+1</b>. Этот +1 — единственная валюта, которая сдвинулась.');
+}},
+{id:'wrap',en:'deal closed',ru:'сделка закрыта',run(){
+  narr('Contract <b>c-'+BATCH+'demo</b> is <b>Released</b>: promised → delivered → proven → closed, budget untouched at 0.00. Try the injectors above: <b>413</b> shows an oversize refusal, <b>404</b> a deliberate honest refusal, <b>tamper</b> rewrites a stored fact and watch the chain break and reputation answer <b>−5</b>.',
+       'Контракт <b>c-'+BATCH+'demo</b> — <b>Released</b>: обещано → сделано → доказано → закрыто, бюджет не тронут: 0.00. Попробуйте кнопки выше: <b>413</b> — отказ по размеру, <b>404</b> — намеренный честный отказ, <b>подделать</b> — переписывает сохранённый факт, и вы увидите, как ломается цепочка и как репутация отвечает <b>−5</b>.');
+}}
+];
+
+/* ============ injectors ============ */
+function injOversize(){
+  if(!S.booted){narr('Run the scenario first — Scout needs its key.','Сначала запустите сценарий — Scout нужен его ключ.');render();return;}
+  S.hub.stats.r413++;
+  const body={schema:'pactum-event/v1',topic:'scan.candidates',batch:BATCH,note:'oversized payload',
+    pad:'x'.repeat(96)};
+  feed('http','Scout → Hub','POST /hub/publish?topic=scan.candidates',
+    'POST /hub/publish?topic=scan.candidates\nContent-Length: 307200 bytes  (300 KiB > 256 KiB limit)\n\n'+JSON.stringify(body).slice(0,120)+'…','rejected');
+  feed('http','Hub → Scout','response',
+    '→ 413 Payload Too Large\n\n{"error":"body exceeds 256 KiB","hint":"split the batch or raise the limit at your own hub"}','rejected');
+  narr('An oversized batch is <b>rejected with 413</b> — immediately, explicitly, to the sender. Nothing is silently dropped: Scout knows the publish failed and can split the batch. Silent loss is the bug class this protocol refuses to have.',
+       'Слишком большой батч <b>отклонён с 413</b> — сразу, явно, отправителю. Ничего не потерялось молча: Scout знает, что публикация не прошла, и может разбить батч. Тихая потеря — тот класс багов, который этот протокол отказывается допускать.');
+  render();
+}
+function injDeny(){
+  if(!S.booted){narr('Run the scenario first — keys first.','Сначала запустите сценарий — сначала ключи.');render();return;}
+  const secret=sha256('auditor-secret:'+nowTs()).slice(0,32);
+  S.hub.subs.push({sub:'Auditor',node:ID.auditor,topic:'scan.candidates',lease:86400,state:'active',secret});
+  S.agents.auditor.out++;S.agents.auditor.inn++;
+  feed('http','Auditor → Hub','/hub/subscribe',
+    'POST /hub/subscribe\nhub.mode=subscribe\nhub.topic=scan.candidates\nhub.callback=http://auditor.local/callback\nhub.lease_seconds=86400\n\n→ challenge … → 200 OK (subscribed, then policy applied)');
+  feed('http','Hub → Auditor','POST callback',
+    'POST http://auditor.local/callback\nX-Hub-Signature: sha256=…\n\n{"schema":"pactum-event/v1","topic":"scan.candidates"}','delivered');
+  feed('http','Auditor → Hub','response',
+    '→ 404 Not Found\n\n{"policy":"proof channel only","reason":"raw candidates are not for me"}','rejected');
+  const sub=S.hub.subs.find(x=>x.sub==='Auditor');if(sub)sub.state='denied';
+  S.hub.stats.denied++;S.agents.auditor.out++;
+  feed('notice','Hub → Auditor','hub.mode=denied',
+    'POST http://auditor.local/callback\n\nhub.mode=denied&hub.topic=scan.candidates&hub.reason=subscriber+answered+404','rejected');
+  narr('Auditor subscribes, receives one delivery and answers <b>404 — "not for me"</b>: its policy is proofs only, raw candidates are noise. The hub marks the subscription <b>denied</b> and notifies the subscriber with <b>hub.mode=denied</b>. This is not an error — it is <b>honest refusal</b>, a first-class protocol event. No reputation damage: refusing honestly is behaving correctly.',
+       'Auditor подписывается, получает одну доставку и отвечает <b>404 — «не для меня»</b>: его политика — только доказательства, сырые кандидаты ему не нужны. Хаб помечает подписку <b>denied</b> и уведомляет подписчика через <b>hub.mode=denied</b>. Это не ошибка — это <b>честный отказ</b>, полноценное событие протокола. Репутация не страдает: честно отказаться — значит вести себя правильно.');
+  render();
+}
+function injTamper(){
+  if(!S.booted||!S.chain.some(b=>b.owner==='digest')){narr('Run the scenario first — there is nothing to tamper with yet.','Сначала запустите сценарий — подделывать пока нечего.');render();return;}
+  const target=S.chain.find(b=>b.owner==='digest'&&b.register==='LOGIC')||S.chain.find(b=>b.owner==='digest');
+  S.tamper=S.tamper||{};S.tamper[target.seq]=target.text.replace('5 unique','50 unique');
+  S.agents.digest.status={en:'stored fact rewritten (attack)',ru:'сохранённый факт переписан (атака)'};
+  const res=verifyChain(S.chain,'digest',S.tamper);
+  feed('notice','Auditor','pactum facts verify',
+    'GET /facts/verify\n\n→ verify(): BREAK at seq '+res.at+'\n  stored     hash '+res.stored.slice(0,32)+'…\n  recomputed '+res.recomputed.slice(0,32)+'…\n  block text no longer matches its own hash','rejected');
+  ledger('digest',-5,{en:'tampered history detected by Auditor (dishonesty: −5)',ru:'подделка истории обнаружена Auditor-ом (нечестность: −5)'});
+  S.settle=[{t:'audit',v:'verify() FAILED at seq '+res.at},{t:'contract',v:'no money involved — reputation answered'}];
+  narr('Someone rewrote Digest\u2019s stored fact ("…6 → <s>50</s> unique…"). The text no longer produces its hash: <b>verify() breaks at seq '+res.at+'</b>. Auditor sees the mismatch and cuts reputation by <b>−5</b> — the same penalty as silence past a deadline. No police, no court: an unforgeable history plus published consequences.',
+       'Кто-то переписал сохранённый факт Digest («…6 → <s>50</s> уникальных…»). Текст больше не даёт свой хеш: <b>verify() ломается на seq '+res.at+'</b>. Auditor видит несовпадение и режет репутацию на <b>−5</b> — тот же штраф, что и за молчание после дедлайна. Ни полиции, ни суда: неподделываемая история плюс опубликованные последствия.');
+  render();
+}
+
+/* ============ engine ============ */
+function stopRun(){S.running=false;clearTimeout(timer);ui();}
+function step(){if(!S||S.running)return;if(S.idx>=STEPS.length){stopRun();return;}STEPS[S.idx++].run();render();}
+function play(){
+  if(S.idx>=STEPS.length)return;
+  S.running=true;ui();
+  const tick=()=>{
+    if(!S.running)return;
+    if(S.idx>=STEPS.length){stopRun();return;}
+    STEPS[S.idx++].run();render();
+    timer=setTimeout(tick,1500/S.speed);
+  };
+  tick();
+}
+
+/* ============ rendering ============ */
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function envHtml(text){
+  let h=esc(text);
+  h=h.replace(/^([A-Z][A-Za-z0-9-]*):/gm,'<span class="p">$1</span>:');
+  return h;
+}
+function feedHtml(){
+  if(!S.feed.length)return'';
+  return S.feed.map(m=>{
+    const cls='msg '+(m.cls||'');
+    return '<div class="'+cls+'"><div class="mh"><span class="kind '+m.kind+'">'+m.kind+'</span>'
+      +'<span class="route">'+esc(m.from)+' → '+esc(m.to)+'</span></div>'
+      +'<pre class="'+(m.kind==='http'||m.kind==='notice'?'':'')+'">'+envHtml(m.text)+'</pre></div>';
+  }).join('');
+}
+function agentHtml(w){
+  const a=S.agents[w],id={scout:ID.scout,digest:ID.digest,auditor:ID.auditor}[w];
+  const names={scout:['Scout','watchlist scanner · executor','Scout','сканер watchlist · исполнитель'],
+    digest:['Digest','subscriber · fact keeper','Digest','подписчик · хранитель фактов'],
+    auditor:['Auditor','verifier · reputation','Auditor','проверяющий · репутация']}[w];
+  const rep=a.rep===0?'<span class="badge zero">rep 0</span>'
+    :a.rep>0?'<span class="badge up">rep +'+a.rep+'</span>':'<span class="badge down">rep '+a.rep+'</span>';
+  const facts=S.chain.filter(b=>b.owner===w).length;
+  return '<h3><span class="dot'+(S.booted?' on':'')+'"></span>'+names[0]+'</h3>'
+    +'<div class="meta"><span class="en">'+names[1]+'</span><span class="ru">'+names[3]+'</span></div>'
+    +'<div class="meta mono">'+id+'</div>'
+    +'<div class="rowline"><span>'+rep+'</span><span class="mono">↑'+a.out+' ↓'+a.inn+' · facts '+facts+'</span></div>'
+    +'<div class="meta" style="margin-top:4px"><span class="en">'+esc(a.status.en)+'</span><span class="ru">'+esc(a.status.ru)+'</span></div>';
+}
+function hubHtml(){
+  const subs=S.hub.subs.map(s=>{
+    const st=s.state==='active'?'<span class="pill fact">active</span>'
+      :s.state==='denied'?'<span class="pill actn">denied</span>':'<span class="pill opin">degraded</span>';
+    return '<div class="rowline"><span class="mono">'+s.sub+' → '+s.topic+'</span><span class="mono">lease '
+      +Math.floor(s.lease/3600)+'h · '+st+'</span></div>';
+  }).join('')||'<div class="meta"><span class="en">no subscribers yet</span><span class="ru">подписчиков пока нет</span></div>';
+  const st=S.hub.stats;
+  return subs+'<div class="rowline"><span class="mono">published '+st.pub+' · delivered '+st.del
+    +' · denied '+st.denied+' · 413 '+st.r413+'</span></div>';
+}
+function chainHtml(){
+  if(!S.chain.length)return'<div class="meta"><span class="en">empty — facts appear as the scenario runs</span><span class="ru">пусто — факты появятся по ходу сценария</span></div>';
+  return S.chain.map(b=>{
+    const tampered=S.tamper&&S.tamper[b.seq]!=null;
+    const pill={SENSE:'sense',FACT:'fact',LOGIC:'logi',OPINION:'opin',ACTION:'actn'}[b.register]||'fact';
+    return '<div class="blk'+(tampered?' bad':'')+'">'
+      +'<div class="l1"><span class="mono hx">#'+b.seq+'</span><span class="mono hx">'+esc(b.owner)+'</span>'
+      +'<span class="pill '+pill+'">'+b.register+'</span>'
+      +'<span class="hx">'+esc(b.ts)+'</span></div>'
+      +'<div>'+(tampered?'<span class="tampered">'+esc(S.tamper[b.seq])+'</span> <span class="hx">(rewritten — hash no longer matches)</span>':esc(b.text))+'</div>'
+      +'<div class="hx">prev '+(b.prev_hash==='0'.repeat(64)?'genesis':b.prev_hash.slice(0,10)+'…')+' · hash <span class="hash">'+b.hash.slice(0,16)+'…</span></div>'
+      +'</div>';
+  }).join('');
+}
+function proofsHtml(){
+  if(!S.proofs.length)return'<div class="meta"><span class="en">no claims yet — proofs appear at the “proof” step</span><span class="ru">заявлений пока нет — доказательства появятся на шаге «proof»</span></div>';
+  return S.proofs.map(p=>'<div class="prooffile">'+esc(p.text).replace(/^(claim|cmd|digest|excerpt)=/gm,'<span class="p">$1=</span>')
+    .replace(/^status=verified/gm,'<span class="s">status=verified</span>')
+    .replace(/^status=broken/gm,'<span class="e" style="color:var(--bad)">status=broken</span>')+'</div>').join('');
+}
+function ledgerHtml(){
+  if(!S.ledger.length)return'<div class="meta"><span class="en">clean sheet — reputation moves when honesty is tested</span><span class="ru">пусто — репутация меняется, когда честность проверяют</span></div>';
+  const W={scout:'Scout',digest:'Digest',auditor:'Auditor'};
+  return S.ledger.slice().reverse().map(l=>
+    '<div class="rowline"><span><b class="mono">'+W[l.who]+'</b> '
+    +(l.delta>0?'<span class="badge up">+'+l.delta+'</span>':'<span class="badge down">'+l.delta+'</span>')
+    +' <span class="en">'+esc(l.why.en)+'</span><span class="ru">'+esc(l.why.ru)+'</span></span></div>').join('');
+}
+function render(){
+  if(typeof document==='undefined')return;
+  const $=id=>document.getElementById(id);
+  $('feed').innerHTML=feedHtml()||'<div class="msg"><div class="mh"><span class="route en">Press “Run” — letters will appear here.</span><span class="route ru">Нажмите «Запустить» — письма появятся здесь.</span></div></div>';
+  $('c-scout').innerHTML=agentHtml('scout');
+  $('c-digest').innerHTML=agentHtml('digest');
+  $('c-auditor').innerHTML=agentHtml('auditor');
+  $('hubsubs').innerHTML=hubHtml();
+  $('hubstats').innerHTML='<span class="mono">'+ID.digest.slice(0,9)+'…</span><span class="mono">topics: scan.candidates</span>';
+  $('chain').innerHTML=chainHtml();
+  const cv=$('chainVerdict');
+  if(S.chain.some(b=>b.owner==='digest')){
+    const r=verifyChain(S.chain,'digest',S.tamper);
+    cv.className='verdict '+(r.ok?'ok':'bad');cv.style.display='inline-block';
+    cv.textContent=r.ok?('verify(): OK · '+r.n+' blocks'):('verify(): BROKEN at seq '+r.at);
+  }else{cv.className='verdict hidden';cv.style.display='none';}
+  $('proofs').innerHTML=proofsHtml();
+  $('ledger').innerHTML=ledgerHtml();
+  $('narr').innerHTML='<span class="en">'+S.narr.en+'</span><span class="ru">'+S.narr.ru+'</span>';
+  $('settle').innerHTML=S.settle.map(x=>'<span class="chip"><span class="mono">'+esc(x.t)+':</span> '+esc(x.v)+'</span>').join('');
+}
+
+/* ============ ui wiring ============ */
+function ui(){
+  if(typeof document==='undefined')return;
+  const $=id=>document.getElementById(id);
+  $('bRun').disabled=S.running||S.idx>=STEPS.length;
+  $('bPause').disabled=!S.running;
+  $('bStep').disabled=S.running||S.idx>=STEPS.length;
+}
+function reset(){clearTimeout(timer);S=freshState();render();ui();}
+function wire(){
+  const $=id=>document.getElementById(id);
+  $('bRun').onclick=()=>play();
+  $('bPause').onclick=()=>stopRun();
+  $('bStep').onclick=()=>step();
+  $('bReset').onclick=()=>reset();
+  $('bSpeed').onchange=e=>{S.speed=+e.target.value;};
+  $('bOversize').onclick=injOversize;
+  $('bDeny').onclick=injDeny;
+  $('bTamper').onclick=injTamper;
+  document.querySelectorAll('.langsw button').forEach(b=>{
+    b.onclick=()=>{document.body.dataset.lang=b.dataset.l;
+      try{localStorage.setItem('pactum-lang',b.dataset.l)}catch(e){}
+      document.querySelectorAll('.langsw button').forEach(x=>x.classList.toggle('on',x===b));};
+  });
+  const cur=document.body.dataset.lang;
+  document.querySelectorAll('.langsw button').forEach(x=>x.classList.toggle('on',x.dataset.l===cur));
+}
+if(typeof document!=='undefined'&&document.getElementById('feed')){reset();wire();}
+if(typeof globalThis!=='undefined'){
+  globalThis.PactumConsole={sha256,hmacSha256,fnv1a64,normalizeOut,addFact,verifyChain,envelope,proofFile,
+    headless(){S=freshState();STEPS.forEach(st=>st.run());return S;},
+    inject:{oversize:injOversize,deny:injDeny,tamper:injTamper},
+    get state(){return S},STEPS};
+}
+</script>
+</body>
+</html>

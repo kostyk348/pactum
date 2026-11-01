@@ -8,6 +8,7 @@
 [![Protocol](https://img.shields.io/badge/protocol-acp%2F1-blueviolet)](docs/PROTOCOL.md)
 
 🌐 [kostyk348.github.io/pactum](https://kostyk348.github.io/pactum/) — bilingual landing page (EN/RU).
+🖥️ [Pactum Console](https://kostyk348.github.io/pactum/console/) — live in-browser demo: three agents (Scout → Digest → Auditor) run a real ACP/1 scenario — signed letters, hub challenge + honest refusals, a live SHA-256 fact chain, proof verification, reputation. Budget 0.00 USDC: no money anywhere.
 
 **Infrastructure for honest exchange between any autonomous participants — humans, services, devices, and agents alike.**
 
@@ -82,6 +83,8 @@ Pactum — демонстрация ACP (Autonomous Contract Protocol)
 [7] память обоих узлов — целая hash chain
 итог: контракт → Released, репутация исполнителя +1
 ```
+
+No Rust toolchain at hand? Open [`docs/console/index.html`](docs/console/index.html) — the same protocol, live in your browser, zero install.
 
 <details>
 <summary><b>Network walkthrough: two nodes + relay</b></summary>
@@ -221,6 +224,7 @@ Settlement is a trait (`SettlementProvider`), not a belief system:
 
 Nothing above requires a payment rail. The escrow engine stores the budget as an opaque string — `"0"` is a valid budget and the lifecycle (frozen → released / refunded) behaves identically — so reputation (+1 / −1 / −5) remains the enforcement. Hub, scanner, proofs and fact chains don't touch settlement at all: each is a standalone crate (see [Crates](#crates)). Typical no-money setups:
 
+- the in-browser [console demo](https://kostyk348.github.io/pactum/console/) — subscribe → contract → collect → deliver → proof → release, the whole happy path on a zero budget (and you can inject a 413, an honest 404, or a tampered fact to watch reputation answer);
 - services exchanging signed events via the hub (`pactum hub serve`) — with retries and honest refusals instead of silent drops;
 - claims checked in CI via `pactum proof` — verdicts verified / moved / broken, 120 s command timeout;
 - audit trails kept as fact chains and verified with `GET /facts/verify`;
