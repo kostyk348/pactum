@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Pactum CLI: one binary for contracts, hub, scanner, proofs and nodes"
+description = "Pactum CLI: one binary for contracts, hub, scanner, proofs, witnesses and nodes"
 authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
@@ -17,11 +17,12 @@ path = "src/main.rs"
 [dependencies]
 pactum-core = { workspace = true }
 pactum-identity = { workspace = true }
-pactum-contract = { workspace = true }
 pactum-proof = { workspace = true }
 pactum-hub = { workspace = true }
 pactum-scan = { workspace = true }
-pactum-node = { workspace = true }
+pactum-witness = { workspace = true }
+pactum-contract = { workspace = true, optional = true }
+pactum-node = { workspace = true, optional = true }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -30,3 +31,8 @@ axum = { workspace = true }
 ureq = { workspace = true }
 hex = { workspace = true }
 thiserror = { workspace = true }
+
+[features]
+default = ["escrow"]
+# деньги — опциональны: без этой фичи бинарник собирается без escrow и узлов
+escrow = ["dep:pactum-contract", "dep:pactum-node"]

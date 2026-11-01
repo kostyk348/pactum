@@ -807,7 +807,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-cli"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "axum",
  "clap",
@@ -819,6 +819,7 @@ dependencies = [
  "pactum-node",
  "pactum-proof",
  "pactum-scan",
+ "pactum-witness",
  "serde",
  "serde_json",
  "thiserror",
@@ -828,7 +829,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-contract"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "pactum-core",
  "serde",
@@ -838,7 +839,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "hex",
  "rand",
@@ -850,7 +851,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-hub"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "axum",
  "hex",
@@ -866,7 +867,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-identity"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "aes-gcm",
  "hex",
@@ -882,7 +883,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-node"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "axum",
  "pactum-contract",
@@ -900,7 +901,7 @@ dependencies = [
 
 [[package]]
 name = "pactum-proof"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "pactum-core",
  "serde",
@@ -910,13 +911,28 @@ dependencies = [
 
 [[package]]
 name = "pactum-scan"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "hex",
  "pactum-core",
  "serde",
  "serde_json",
  "sha2",
+ "thiserror",
+ "tokio",
+ "ureq",
+]
+
+[[package]]
+name = "pactum-witness"
+version = "1.1.0"
+dependencies = [
+ "axum",
+ "hex",
+ "pactum-core",
+ "pactum-identity",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "ureq",

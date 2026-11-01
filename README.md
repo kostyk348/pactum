@@ -9,6 +9,7 @@
 
 🌐 [kostyk348.github.io/pactum](https://kostyk348.github.io/pactum/) — bilingual landing page (EN/RU).
 🖥️ [Pactum Console](https://kostyk348.github.io/pactum/console/) — live in-browser demo: three agents (Scout → Digest → Auditor) run a real ACP/1 scenario — signed letters, hub challenge + honest refusals, a live SHA-256 fact chain, proof verification, reputation. Budget 0.00 USDC: no money anywhere.
+🖋 [Pactum Witness](https://kostyk348.github.io/pactum/witness/) — a real service, not a demo: a content notary with signed receipts, a tamper-evident journal and offline verification (`pactum witness serve`).
 
 **Infrastructure for honest exchange between any autonomous participants — humans, services, devices, and agents alike.**
 
@@ -195,6 +196,7 @@ The CLI is made for humans, the REST API (`/inbox`, `/outbox`, `/process`, `/hub
 | [`pactum-hub`](crates/pactum-hub) | topics, leases, retry queue, honest refusals, HTTP API |
 | [`pactum-scan`](crates/pactum-scan) | url/file/cmd sources, conditional GET, dedup, candidate queue |
 | [`pactum-proof`](crates/pactum-proof) | claims, normalization, verdicts, flat-file ledger |
+| [`pactum-witness`](crates/pactum-witness) | content notary: signed receipts, hash-chained journal, checkpoints, honest refusals |
 | [`pactum-node`](crates/pactum-node) | orchestrator, sandbox, REST API, capability relay |
 | [`pactum-cli`](crates/pactum-cli) | the `pactum` binary: everything above in one CLI |
 
@@ -210,6 +212,7 @@ Protocol specification: [`docs/PROTOCOL.md`](docs/PROTOCOL.md) — letters, cont
 | `pactum scan run\|candidates\|accept\|reject` | watch sources, review candidates |
 | `pactum proof add\|check\|list\|show` | re-verifiable claims (CI-friendly exit codes) |
 | `pactum facts add\|verify\|list` | hash-chain memory |
+| `pactum witness serve\|notarize\|verify\|checkpoint` | content notary: signed receipts + tamper-evident log |
 | `pactum node serve` | full node: API + hub + relay + maintenance ticks |
 | `pactum demo` | the whole protocol in one process |
 
@@ -229,6 +232,20 @@ Nothing above requires a payment rail. The escrow engine stores the budget as an
 - claims checked in CI via `pactum proof` — verdicts verified / moved / broken, 120 s command timeout;
 - audit trails kept as fact chains and verified with `GET /facts/verify`;
 - zero-budget contracts, where the only currency is reputation.
+
+Building without money is literal now: `cargo build --no-default-features -p pactum-cli` produces a binary with id, hub, scanner, proof, facts and witness — no escrow, no contract nodes.
+
+## Witness: a content notary
+
+**Pactum Witness** (crate [`pactum-witness`](crates/pactum-witness), command group `pactum witness`) is a full application built on the protocol primitives — and it needs no money at all. The job: *prove that a document — a file, a page, a release artifact — existed in exactly this form at a moment in time*. Screenshots are forgeable, third-party archives are centralized and unauditable; a Witness receipt is a signed statement (ECDSA P-256) that anyone can verify offline, years later:
+
+```bash
+pactum witness notarize contract.pdf --store          # → signed receipt: seq, SHA-256, timestamp
+pactum witness verify receipt.json --dir witness-data # offline: signature + journal membership
+pactum witness serve --listen 0.0.0.0:8090            # REST notary: POST /notarize, /notarize/url
+```
+
+Every receipt carries the notary's public key, so verification needs neither the server nor the network. The journal (`receipts.jsonl`) is an append-only hash chain — rewriting history breaks `verify()`, and a damaged log makes the service refuse to boot. Signed checkpoints can be published to a hub (topic `witness.head`), so third parties co-witness the state. Honest refusals everywhere: `413` too large, `429` too frequent, `404` not notarized, `502` upstream failed. Full manual: [`docs/WITNESS.md`](docs/WITNESS.md) · page: [kostyk348.github.io/pactum/witness](https://kostyk348.github.io/pactum/witness/).
 
 ## Security
 

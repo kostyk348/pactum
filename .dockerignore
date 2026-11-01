@@ -1,0 +1,7 @@
+target/
+.git/
+contracts/
+keys/
+data/
+witness-data/
+*.log

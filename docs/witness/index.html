@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pactum Witness — content notary</title>
+<style>
+:root{--bg:#0d1420;--panel:#131c2c;--panel2:#182338;--line:#22314d;--fg:#dbe4f0;--dim:#8b99b0;--amber:#f0b429;--green:#9fd3a8;--blue:#7aa2f7;--red:#e5746b}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+code,pre,.mono{font-family:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+code{background:var(--panel2);border:1px solid var(--line);padding:.08em .38em;border-radius:5px;font-size:.88em;color:var(--green)}
+pre{background:#0a1018;border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;overflow-x:auto;font-size:.85rem;line-height:1.55}
+pre code{background:none;border:none;padding:0}
+.wrap{max-width:62rem;margin:0 auto;padding:0 1.25rem}
+header{position:sticky;top:0;background:rgba(13,20,32,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10}
+header .wrap{display:flex;align-items:center;gap:1.4rem;height:3.4rem}
+.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--fg)}
+nav{margin-left:auto;display:flex;align-items:center;gap:1.1rem;font-size:.92rem}
+nav a{color:var(--dim)}nav a:hover{color:var(--fg);text-decoration:none}
+.langsw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.langsw button{background:none;border:none;color:var(--dim);padding:.28rem .6rem;cursor:pointer;font:inherit;font-size:.85rem}
+.langsw button.on{background:var(--amber);color:#141a24;font-weight:700}
+.overline{color:var(--amber);font:600 .78rem/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase}
+h1{font-size:clamp(2rem,5vw,3.1rem);margin:.5rem 0 .8rem;letter-spacing:-.02em}
+h2{font-size:1.55rem;margin:0 0 1rem;letter-spacing:-.01em}
+h3{font-size:1.08rem;margin:0 0 .4rem}
+.hero{padding:4.2rem 0 3.4rem;background:radial-gradient(60% 90% at 50% -10%,rgba(240,180,41,.10),transparent 60%)}
+.tagline{font-size:1.22rem;font-weight:600;margin:.2rem 0 .6rem}
+.sub{color:var(--dim);max-width:46rem}
+.cta{display:flex;gap:.8rem;flex-wrap:wrap;margin:1.6rem 0 1.2rem}
+.btn{padding:.62rem 1.15rem;border-radius:10px;font-weight:600;font-size:.95rem;border:1px solid var(--line)}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:#141a24}
+.btn.sec{color:var(--fg)}
+.btn.sec:hover{border-color:var(--amber);text-decoration:none}
+.chips{display:flex;gap:.5rem;flex-wrap:wrap}
+.chip{font:500 .78rem/1 ui-monospace,monospace;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:.42rem .75rem}
+.chip.ok{color:var(--green);border-color:#2c4634}
+section{padding:3.2rem 0;border-top:1px solid var(--line)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.4rem}
+.card p{color:var(--dim);font-size:.93rem;margin:.3rem 0 0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin:1.4rem 0}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
+.step .n{color:var(--amber);font:700 .8rem/1 ui-monospace,monospace;letter-spacing:.14em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:52rem){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;border-top:1px solid var(--line);padding:.55rem .6rem;vertical-align:top}
+th{color:var(--dim);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em}
+.badge{display:inline-block;font:600 .72rem/1 ui-monospace,monospace;border-radius:6px;padding:.28rem .5rem;margin-right:.35rem}
+.b413,.b429,.b404,.b400,.b502{background:rgba(229,116,107,.14);color:var(--red)}
+.note{color:var(--dim);font-size:.9rem}
+.callout{background:var(--panel);border:1px solid #4a3b18;border-left:3px solid var(--amber);border-radius:12px;padding:1.1rem 1.3rem;margin:1.4rem 0}
+footer{border-top:1px solid var(--line);padding:2rem 0 3rem;color:var(--dim);font-size:.9rem}
+</style>
+</head>
+<body id="top">
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="../">
+      <svg width="26" height="26" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0d1420"/><path d="M18 14h20a12 12 0 0 1 0 24H30v12h-8V14zm8 8v8h11a4 4 0 0 0 0-8H26z" fill="#f0b429"/></svg>
+      Pactum
+    </a>
+    <nav>
+      <a href="../"><span class="en">← Landing</span><span class="ru">← Лендинг</span></a>
+      <a href="https://github.com/kostyk348/pactum/blob/main/docs/WITNESS.md"><span class="en">Manual</span><span class="ru">Руководство</span></a>
+      <a href="https://github.com/kostyk348/pactum">GitHub ↗</a>
+      <div class="langsw" role="group" aria-label="Language">
+        <button id="btn-en" onclick="setLang('en')" type="button">EN</button>
+        <button id="btn-ru" onclick="setLang('ru')" type="button">RU</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="overline">acp/1 · <span class="en">real service · no money · offline verification</span><span class="ru">реальный сервис · без денег · офлайн-проверка</span></div>
+    <h1>Pactum Witness</h1>
+    <p class="tagline">
+      <span class="en">A content notary: prove what a document was at a moment in time — with a signature, not a screenshot.</span>
+      <span class="ru">Нотариус контента: доказать, чем документ был в момент T — подписью, а не скриншотом.</span>
+    </p>
+    <p class="sub">
+      <span class="en">Send a file or a URL — get a signed receipt (SHA-256 + timestamp + ECDSA P-256) that anyone can verify offline, years later, without trusting the server. The journal is an append-only hash chain; signed checkpoints go to the hub so third parties co-witness the state. Screenshots are forgeable, web archives are centralized — this is the honest alternative.</span>
+      <span class="ru">Пришлите файл или URL — получите подписанный приёмник (SHA-256 + время + ECDSA P-256), который любой проверит офлайн хоть через годы, не веря серверу на слово. Журнал — append-only хеш-цепочка, подписанные checkpoint-ы уходят в хаб: третьи стороны со-свидетельствуют состояние. Скриншоты подделываются, веб-архивы централизованы — вот честная альтернатива.</span>
+    </p>
+    <div class="cta">
+      <a class="btn pri" href="#quickstart"><span class="en">Start in 30 seconds</span><span class="ru">Запустить за 30 секунд</span></a>
+      <a class="btn sec" href="https://github.com/kostyk348/pactum/blob/main/docs/WITNESS.md"><span class="en">Full manual</span><span class="ru">Полное руководство</span></a>
+      <a class="btn sec" href="../console/"><span class="en">▶ Try the live protocol demo</span><span class="ru">▶ Живое демо протокола</span></a>
+    </div>
+    <div class="chips">
+      <span class="chip"><span class="en">crate: pactum-witness</span><span class="ru">крейт: pactum-witness</span></span>
+      <span class="chip ok"><span class="en">36 tests in crate · 132 workspace</span><span class="ru">36 тестов в крейте · 132 в воркспейсе</span></span>
+      <span class="chip">ECDSA P-256</span>
+      <span class="chip">SHA-256 chain</span>
+      <span class="chip ok"><span class="en">0.00 USDC — money not involved</span><span class="ru">0.00 USDC — деньги не участвуют</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WHO ============ -->
+<section id="why">
+  <div class="wrap">
+    <h2><span class="en">Who needs this today</span><span class="ru">Кому это нужно сегодня</span></h2>
+    <div class="cards">
+      <div class="card">
+        <h3><span class="en">Journalism & research</span><span class="ru">Журналистика и исследования</span></h3>
+        <p><span class="en">Notarize a page, a dataset or a leaked letter <em>before</em> publishing. When it disappears — and it will — the receipt proves you had the exact bytes, with a timestamp and a signature.</span>
+        <span class="ru">Нотаризуйте страницу, датасет или письмо <em>до</em> публикации. Когда источник исчезнет — а он исчезнет, — приёмник докажет, что у вас были ровно эти байты, со временем и подписью.</span></p>
+      </div>
+      <div class="card">
+        <h3><span class="en">Contracts & compliance</span><span class="ru">Договоры и комплаенс</span></h3>
+        <p><span class="en">Fix the exact form of a contract, an invoice, a specification at the moment of signing. Later disputes reduce to one command: re-hash the file, compare with the receipt.</span>
+        <span class="ru">Зафиксируйте точную форму договора, сметы или спецификации в момент подписания. Спор потом сводится к одной команде: пересчитать хеш файла и сверить с приёмником.</span></p>
+      </div>
+      <div class="card">
+        <h3><span class="en">Releases & CI</span><span class="ru">Релизы и CI</span></h3>
+        <p><span class="en">Notarize artifacts at build time; audit at any time. The receipt travels next to the artifact — verification needs no network and no server, only the pinned public key.</span>
+        <span class="ru">Нотаризуйте артефакты на этапе сборки, аудируйте когда угодно. Приёмник лежит рядом с артефактом — проверке не нужны ни сеть, ни сервер, только запиненный открытый ключ.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW ============ -->
+<section id="how">
+  <div class="wrap">
+    <h2><span class="en">Three steps, zero trust required</span><span class="ru">Три шага, доверие не требуется</span></h2>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3><span class="en">Notarize</span><span class="ru">Нотаризация</span></h3>
+        <p class="note"><span class="en">File or URL → the service hashes the bytes (SHA-256), appends an entry to the hash-chained journal and signs it with its P-256 key.</span>
+        <span class="ru">Файл или URL → сервис считает SHA-256 байтов, дописывает запись в хеш-цепочку журнала и подписывает ключом P-256.</span></p></div>
+      <div class="step"><div class="n">02</div><h3><span class="en">Keep the receipt</span><span class="ru">Хранение приёмника</span></h3>
+        <p class="note"><span class="en">The receipt carries everything needed to check it: the notary's public key, the sequence number, the previous entry's hash. It is self-contained.</span>
+        <span class="ru">Приёмник несёт всё нужное для проверки: открытый ключ нотариуса, номер записи, хеш предыдущей. Он самодостаточен.</span></p></div>
+      <div class="step"><div class="n">03</div><h3><span class="en">Verify offline</span><span class="ru">Офлайн-проверка</span></h3>
+        <p class="note"><span class="en">Recompute the canonical hash, check the signature, check journal membership — one CLI command, no server, years later.</span>
+        <span class="ru">Пересчитать канонический хеш, проверить подпись и принадлежность журналу — одна команда, без сервера, хоть через годы.</span></p></div>
+    </div>
+    <div class="grid2">
+      <div>
+        <h3><span class="en">A real receipt</span><span class="ru">Настоящий приёмник</span></h3>
+        <p class="note"><span class="en">Produced by <code>pactum witness notarize</code> — this is the actual output, not an illustration:</span>
+        <span class="ru">Вывод <code>pactum witness notarize</code> — это настоящий вывод команды, а не картинка:</span></p>
+<pre><code>{
+  "v": 1,
+  "witness": "p971a456a976faa41",
+  "pubkey": "0431e7cb484c…90ef87911",
+  "seq": 1,
+  "ts": "2026-11-01T18:50:36Z",
+  "content_sha256": "9b54f5e8de20a129…e88885",
+  "size": 119,
+  "note": "смета.txt",
+  "stored": true,
+  "prev_hash": "",
+  "entry_hash": "5e9596fedf426b69…4b9a0a68",
+  "sig": "ecdsa-p256:76167857f1c9…"
+}</code></pre>
+      </div>
+      <div>
+        <h3><span class="en">And its verification</span><span class="ru">И его проверка</span></h3>
+<pre><code>$ pactum witness verify receipt.json --dir witness-data
+подпись верна: witness p971a456a976faa41 ·
+  seq 2 · 2026-11-01T18:50:36Z · 121 байт
+запись #2 найдена в журнале
+  (2 записей), цепочка цела</code></pre>
+        <p class="note"><span class="en">Rewrite the journal by hand and the same command refuses:</span>
+        <span class="ru">Перепишите журнал руками — та же команда откажет:</span></p>
+<pre><code>журнал повреждён: цепочка повреждена
+  в записи #2: приёмник не подтверждён:
+  хеш записи не сходится: заявлен
+  2e58f7db…, вычислен 77434c4a…</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ API ============ -->
+<section id="api">
+  <div class="wrap">
+    <h2><span class="en">REST API — honest refusals included</span><span class="ru">REST API — с честными отказами</span></h2>
+    <table>
+      <tr><th><span class="en">Endpoint</span><span class="ru">Маршрут</span></th><th><span class="en">What it does</span><span class="ru">Что делает</span></th></tr>
+      <tr><td><code>POST /notarize?store=1&amp;note=…</code></td><td><span class="en">body = document → receipt. Idempotent: same digest → same receipt, <code>duplicate: true</code>.</span><span class="ru">тело = документ → приёмник. Идемпотентно: тот же дайджест → тот же приёмник, <code>duplicate: true</code>.</span></td></tr>
+      <tr><td><code>POST /notarize/url?url=…</code></td><td><span class="en">the notary fetches the page itself (redirects checked hop by hop, private addresses refused) and notarizes it.</span><span class="ru">нотариус сам скачивает страницу (редиректы проверяются по одному, приватные адреса отвергаются) и нотаризует.</span></td></tr>
+      <tr><td><code>GET /receipts/{sha256}</code></td><td><span class="en">the receipt.</span><span class="ru">приёмник.</span></td></tr>
+      <tr><td><code>GET /verify/{sha256}</code></td><td><span class="en">receipt + signed chain head, re-verified live.</span><span class="ru">приёмник + подписанная голова, перепроверка живьём.</span></td></tr>
+      <tr><td><code>GET /chain/head</code></td><td><span class="en">signed checkpoint (for co-witnessing).</span><span class="ru">подписанный checkpoint (для со-свидетельствования).</span></td></tr>
+      <tr><td><code>GET /chain/export</code></td><td><span class="en">the whole journal as NDJSON — for audit and mirroring.</span><span class="ru">весь журнал NDJSON — для аудита и зеркалирования.</span></td></tr>
+      <tr><td><code>GET /blobs/{sha256}</code></td><td><span class="en">stored bytes (only if notarized with <code>store=1</code>).</span><span class="ru">сохранённые байты (только если нотаризовали с <code>store=1</code>).</span></td></tr>
+      <tr><td><code>GET /health</code></td><td><span class="en">status, public key, journal summary.</span><span class="ru">статус, открытый ключ, сводка журнала.</span></td></tr>
+    </table>
+    <div class="callout">
+      <b><span class="en">Nothing is lost silently:</span><span class="ru">Ничего не теряется молча:</span></b>
+      <span class="badge b400">400</span><span class="en">bad url / digest</span><span class="ru">плохой url / digest</span> ·
+      <span class="badge b404">404</span><span class="en">not notarized</span><span class="ru">не нотариован</span> ·
+      <span class="badge b413">413</span><span class="en">body over limit</span><span class="ru">тело больше лимита</span> ·
+      <span class="badge b429">429</span><span class="en">too frequent (per-IP window)</span><span class="ru">слишком часто (окно на IP)</span> ·
+      <span class="badge b502">502</span><span class="en">upstream failed</span><span class="ru">источник недоступен</span>
+      <p class="note"><span class="en">A damaged journal makes the service refuse to boot — an honest failure beats silent corruption.</span>
+      <span class="ru">Повреждённый журнал не даёт сервису подняться — честный отказ лучше тихой порчи.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST ============ -->
+<section id="trust">
+  <div class="wrap">
+    <h2><span class="en">What it proves — and what it doesn't</span><span class="ru">Что доказывает — и что нет</span></h2>
+    <div class="grid2">
+      <div class="card">
+        <h3><span class="en">Proves</span><span class="ru">Доказывает</span></h3>
+        <p><span class="en">That the notary with key <code>p…</code> saw exactly these bytes at <code>ts</code>, as entry <code>seq</code> of a chain that is still intact — and that independent checkpoint holders can confirm the chain was never rewritten.</span>
+        <span class="ru">Что нотариус с ключом <code>p…</code> видел ровно эти байты в момент <code>ts</code> как запись <code>seq</code> цепочки, которая цела до сих пор, — и что независимые хранители checkpoint-ов подтвердят: историю не переписывали.</span></p>
+      </div>
+      <div class="card">
+        <h3><span class="en">Doesn't prove</span><span class="ru">Не доказывает</span></h3>
+        <p><span class="en">Guaranteed wall-clock time (server clocks are used — publish checkpoints often, RFC 3161 is on the roadmap); who was the first to publish; and protection against the key owner unless you pin the key and keep external checkpoints.</span>
+        <span class="ru">Гарантированное астрономическое время (берутся часы сервера — публикуйте checkpoint-ы чаще, RFC 3161 в roadmap); кто опубликовал первым; и защиту от владельца ключа, если вы не запинили ключ и не храните внешние checkpoint-ы.</span></p>
+      </div>
+    </div>
+    <p class="note"><span class="en">The full trust model, hardening guide and systemd/Docker recipes are in the manual: <a href="https://github.com/kostyk348/pactum/blob/main/docs/WITNESS.md">docs/WITNESS.md</a>.</span>
+    <span class="ru">Полная модель доверия, усиление и рецепты systemd/Docker — в руководстве: <a href="https://github.com/kostyk348/pactum/blob/main/docs/WITNESS.md">docs/WITNESS.md</a>.</span></p>
+  </div>
+</section>
+
+<!-- ============ QUICKSTART ============ -->
+<section id="quickstart">
+  <div class="wrap">
+    <h2><span class="en">Start in 30 seconds</span><span class="ru">Запуск за 30 секунд</span></h2>
+    <h3><span class="en">Local file, no server (CI)</span><span class="ru">Локальный файл, без сервера (CI)</span></h3>
+<pre><code>git clone https://github.com/kostyk348/pactum && cd pactum && cargo build --release
+./target/release/pactum witness notarize contract.pdf --store --note "подписан сторонами"
+./target/release/pactum witness verify receipt.json --dir witness-data</code></pre>
+    <h3><span class="en">As a service</span><span class="ru">Как сервис</span></h3>
+<pre><code>pactum witness serve --dir witness-data --listen 0.0.0.0:8090
+curl -X POST --data-binary @page.html "http://127.0.0.1:8090/notarize?store=1"</code></pre>
+    <h3>Docker</h3>
+<pre><code>docker build -t pactum-witness .
+docker run -p 8090:8090 -v witness-data:/data pactum-witness</code></pre>
+    <h3><span class="en">Co-witness via the hub</span><span class="ru">Со-свидетельствование через хаб</span></h3>
+<pre><code>pactum witness serve --dir witness-data \
+  --hub-url http://127.0.0.1:8080 --hub-topic witness.head --checkpoint-every 25</code></pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="en">Pactum Witness — one of the primitives doing real work: hub, scanner, proofs, fact chains, contracts — all in the <a href="https://github.com/kostyk348/pactum">repository</a>.</span>
+    <span class="ru">Pactum Witness — один из примитивов, работающих по-настоящему: хаб, сканер, доказательства, цепочки фактов, контракты — всё в <a href="https://github.com/kostyk348/pactum">репозитории</a>.</span>
+  </div>
+</footer>
+
+<script>
+function setLang(lang){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('.en,.ru').forEach(el=>{
+    el.style.display=el.classList.contains(lang)?'':'none';
+  });
+  document.getElementById('btn-en').classList.toggle('on',lang==='en');
+  document.getElementById('btn-ru').classList.toggle('on',lang==='ru');
+  try{localStorage.setItem('pactum-lang',lang)}catch(e){}
+}
+(function(){
+  var lang='en';
+  try{lang=localStorage.getItem('pactum-lang')||((navigator.language||'').toLowerCase().startsWith('ru')?'ru':'en')}catch(e){}
+  setLang(lang);
+})();
+</script>
+</body>
+</html>

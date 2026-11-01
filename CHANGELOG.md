@@ -3,7 +3,7 @@
 Все заметные изменения проекта документируются в этом файле.
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/).
 
-## Неизданное
+## [1.1.0] — 2026-11-01
 
 ### Добавлено
 
@@ -14,6 +14,20 @@
   истории ломает `verify()` и роняет репутацию на −5. Бюджет демо-контракта — 0.00 USDC:
   деньги опциональны. Один самодостаточный файл без сборки и зависимостей; ключи и подписи
   симулированы (`ecdsa-p256:sim:`), хеши и HMAC — настоящие.
+- **Нотариус контента** — новый крейт [`pactum-witness`](crates/pactum-witness) и группа команд
+  `pactum witness`: подписанные приёмники (ECDSA P-256, проверка офлайн), append-only журнал
+  `receipts.jsonl` с хеш-цепочкой (повреждённый журнал сервис не поднимает), blob-хранилище
+  с контрольной сверкой SHA-256, checkpoint-ы в хаб (топик `witness.head`), rate limit на IP,
+  честные отказы (`400/404/413/429/502`), чтение URL с защитой от SSRF, лимитами и ручными
+  редиректами. REST: `POST /notarize`, `POST /notarize/url`, `GET /receipts`, `GET /verify`,
+  `GET /chain/head`, `GET /chain/export`, `GET /blobs`, `GET /health`. 36 тестов в крейте,
+  132 по воркспейсу.
+- **Деньги — под флагом**: feature `escrow` (включён по умолчанию) в `pactum-cli`;
+  `cargo build --no-default-features` даёт бинарник без контрактов и узлов — id, хаб, сканер,
+  proof, факты и witness остаются. В CI добавлена проверка обоих вариантов.
+- **Dockerfile** для `pactum witness serve` (multi-stage, дистрибутивный образ).
+- Страница Witness: [kostyk348.github.io/pactum/witness](https://kostyk348.github.io/pactum/witness/)
+  и руководство [`docs/WITNESS.md`](docs/WITNESS.md).
 
 ## [1.0.0] — 2026-11-01
 

@@ -9,6 +9,7 @@
 
 🌐 [kostyk348.github.io/pactum](https://kostyk348.github.io/pactum/) — двуязычный сайт-лендинг (EN/RU).
 🖥️ [Pactum Console](https://kostyk348.github.io/pactum/console/) — живое демо в браузере: три агента (Scout → Digest → Auditor) проживают настоящий сценарий ACP/1 — подписанные письма, challenge-подписки и честные отказы, живая цепочка фактов на SHA-256, проверка доказательств, репутация. Бюджет 0.00 USDC: без денег вообще.
+🖋 [Pactum Witness](https://kostyk348.github.io/pactum/witness/) — уже реальный сервис, не демо: нотариус контента с подписанными приёмниками, неперенаписываемым журналом и офлайн-проверкой (`pactum witness serve`).
 
 **Инфраструктура честного обмена для любых автономных участников — людей, сервисов, устройств и агентов.**
 
@@ -195,6 +196,7 @@ CLI сделан для людей, REST API (`/inbox`, `/outbox`, `/process`, `
 | [`pactum-hub`](crates/pactum-hub) | топики, аренды, очередь ретраев, честные отказы, HTTP API |
 | [`pactum-scan`](crates/pactum-scan) | источники url/file/cmd, conditional GET, дедуп, очередь кандидатов |
 | [`pactum-proof`](crates/pactum-proof) | заявления, нормализация, вердикты, плоский реестр |
+| [`pactum-witness`](crates/pactum-witness) | нотариус контента: подписанные приёмники, журнал-цепочка, checkpoint-ы, честные отказы |
 | [`pactum-node`](crates/pactum-node) | оркестратор, песочница, REST API, capability-релей |
 | [`pactum-cli`](crates/pactum-cli) | бинарник `pactum`: всё выше в одном CLI |
 
@@ -210,6 +212,7 @@ CLI сделан для людей, REST API (`/inbox`, `/outbox`, `/process`, `
 | `pactum scan run\|candidates\|accept\|reject` | следить за источниками, разбирать кандидатов |
 | `pactum proof add\|check\|list\|show` | перепроверяемые заявления (CI-код возврата) |
 | `pactum facts add\|verify\|list` | hash-chain память |
+| `pactum witness serve\|notarize\|verify\|checkpoint` | нотариус контента: подписанные приёмники + журнал |
 | `pactum node serve` | полный узел: API + хаб + релей + обслуживание |
 | `pactum demo` | весь протокол в одном процессе |
 
@@ -229,6 +232,20 @@ CLI сделан для людей, REST API (`/inbox`, `/outbox`, `/process`, `
 - заявления проверяются в CI через `pactum proof` — вердикты verified / moved / broken, тайм-аут команды 120 с;
 - аудиторские следы хранятся как цепочки фактов и проверяются `GET /facts/verify`;
 - контракты с нулевым бюджетом, где единственная валюта — репутация.
+
+«Без денег» теперь буквально: `cargo build --no-default-features -p pactum-cli` собирает бинарник с id, хабом, сканером, proof, фактами и witness — без escrow и узлов.
+
+## Witness: нотариус контента
+
+**Pactum Witness** (крейт [`pactum-witness`](crates/pactum-witness), группа команд `pactum witness`) — первое полноценное приложение на примитивах протокола, и деньги ему не нужны вовсе. Задача: *доказать, что документ — файл, страница, релизный артефакт — в момент T существовал ровно в таком виде*. Скриншоты подделываются, сторонние архивы централизованы и неаудируемы; приёмник Witness — подписанное заявление (ECDSA P-256), которое любой проверит офлайн хоть через годы:
+
+```bash
+pactum witness notarize dogovor.pdf --store           # → подписанный приёмник: seq, SHA-256, время
+pactum witness verify receipt.json --dir witness-data # офлайн: подпись + принадлежность журналу
+pactum witness serve --listen 0.0.0.0:8090            # REST-нотариус: POST /notarize, /notarize/url
+```
+
+В каждом приёмнике лежит открытый ключ нотариуса — проверка не требует ни сервера, ни сети. Журнал (`receipts.jsonl`) — append-only хеш-цепочка: переписать историю нельзя, а повреждённый журнал сервис честно не поднимает. Подписанные checkpoint-ы публикуются в хаб (топик `witness.head`) — третьи стороны со-свидетельствуют состояние. Отказы честные: `413` слишком большое, `429` слишком часто, `404` не нотариован, `502` источник недоступен. Полное руководство: [`docs/WITNESS.md`](docs/WITNESS.md) · страница: [kostyk348.github.io/pactum/witness](https://kostyk348.github.io/pactum/witness/).
 
 ## Безопасность
 

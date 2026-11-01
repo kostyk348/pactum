@@ -25,6 +25,18 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+  no-escrow:
+    name: build without escrow (money-optional)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build CLI without the escrow feature
+        run: cargo build -p pactum-cli --no-default-features
+      - name: Test witness without escrow
+        run: cargo test -p pactum-witness
+
   lint:
     name: fmt + clippy
     runs-on: ubuntu-latest

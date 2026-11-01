@@ -9,10 +9,11 @@ members = [
     "crates/pactum-scan",
     "crates/pactum-node",
     "crates/pactum-cli",
+    "crates/pactum-witness",
 ]
 
 [workspace.package]
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 rust-version = "1.80"
 license = "Apache-2.0"
@@ -23,13 +24,14 @@ keywords = ["protocol", "contract", "escrow", "pubsub", "proof"]
 categories = ["network-programming", "command-line-utilities"]
 
 [workspace.dependencies]
-pactum-core = { path = "crates/pactum-core", version = "1.0.0" }
-pactum-identity = { path = "crates/pactum-identity", version = "1.0.0" }
-pactum-contract = { path = "crates/pactum-contract", version = "1.0.0" }
-pactum-proof = { path = "crates/pactum-proof", version = "1.0.0" }
-pactum-hub = { path = "crates/pactum-hub", version = "1.0.0" }
-pactum-scan = { path = "crates/pactum-scan", version = "1.0.0" }
-pactum-node = { path = "crates/pactum-node", version = "1.0.0" }
+pactum-core = { path = "crates/pactum-core", version = "1.1.0" }
+pactum-identity = { path = "crates/pactum-identity", version = "1.1.0" }
+pactum-contract = { path = "crates/pactum-contract", version = "1.1.0" }
+pactum-proof = { path = "crates/pactum-proof", version = "1.1.0" }
+pactum-hub = { path = "crates/pactum-hub", version = "1.1.0" }
+pactum-scan = { path = "crates/pactum-scan", version = "1.1.0" }
+pactum-node = { path = "crates/pactum-node", version = "1.1.0" }
+pactum-witness = { path = "crates/pactum-witness", version = "1.1.0" }
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "io-util", "process", "signal", "sync", "fs"] }
 axum = "0.8"
