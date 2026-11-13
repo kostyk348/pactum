@@ -1,11 +1,20 @@
-<div align="right"><b>English</b> · <a href="README.ru.md">Русский</a></div>
+<div align="center">
+
+<img src="docs/banner.svg" alt="pactum banner" width="1000">
 
 # Pactum
+
+### Open protocol + Rust reference implementation for honest commitments between autonomous participants (humans, services, devices, agents): signed letters, pub/sub hub with honest refusals, verifiable proofs, optional escrow. Money optional.
 
 [![Release](https://img.shields.io/github/v/release/kostyk348/pactum?sort=semver&color=blue)](https://github.com/kostyk348/pactum/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/kostyk348/pactum/ci.yml?branch=main&label=CI)](https://github.com/kostyk348/pactum/actions)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 [![Protocol](https://img.shields.io/badge/protocol-acp%2F1-blueviolet)](docs/PROTOCOL.md)
+
+</div>
+
+---
+
 
 🌐 [kostyk348.github.io/pactum](https://kostyk348.github.io/pactum/) — bilingual landing page (EN/RU).
 🖥️ [Pactum Console](https://kostyk348.github.io/pactum/console/) — live in-browser demo: three agents (Scout → Digest → Auditor) run a real ACP/1 scenario — signed letters, hub challenge + honest refusals, a live SHA-256 fact chain, proof verification, reputation. Budget 0.00 USDC: no money anywhere.
