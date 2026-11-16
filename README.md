@@ -116,7 +116,7 @@ curl -s http://127.0.0.1:9001/relay/subscribe -H 'Content-Type: application/json
 
 # publish a contract from the customer
 pactum contract new --capability ci.compile.rust --title "Build wasm" \
-    --cmd 'cargo build --release' --git https://github.com/example/repo \
+    --cmd 'cargo build --release' --git https://github.com/kostyk348/pactum \
     --budget 1.00 --unit USDC --out contract.json
 curl -s http://127.0.0.1:9002/outbox --data-binary @contract.json
 
